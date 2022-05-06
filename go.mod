@@ -1,4 +1,4 @@
-module imitate-tiktok
+module gitee.com/imitate-tiktok
 
 go 1.18
 

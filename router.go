@@ -1,7 +1,7 @@
 package main
 
 import (
-	"imitate-tiktok/controller"
+	"gitee.com/imitate-tiktok/controller"
 
 	"github.com/gin-gonic/gin"
 )
