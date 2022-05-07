@@ -1,4 +1,4 @@
-module gitee.com/imitate-tiktok
+module gitee.com/Whitroom/imitate-tiktok
 
 go 1.18
 
