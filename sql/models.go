@@ -4,39 +4,28 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Username    string   `json:"username"`
-	Password    string   `json:"password"`
-	ShowLikes   bool     `json:"show_likes"`
-	Enabled     bool     `json:"enabled"`
-	Subscribers []*User  `gorm:"many2many:subscribes"`
-	Followers   []*User  `gorm:"many2many:subscribes"`
-	Likes       []*Video `gorm:"many2many:likes"`
-	Comments    []*Video `gorm:"many2many:comments"`
-}
-
-type Subscribe struct {
-	gorm.Model
-	SubscriberID int `json:"producer_id"`
-	FollowerID   int `json:"follower_id"`
+	Name           string    `gorm:"size:10"`
+	Password       string    `gorm:"size:40"`
+	Content        string    `gorm:"size:50"`
+	Videos         []Video   `gorm:"ForeignKey:AuthorID"`
+	Comments       []Comment `gorm:"many2many:comments;joinForeignKey:UserID"`
+	FavoriteVideos []Video   `gorm:"many2many:user_favorite_videos"`
+	Subscribers    []User    `gorm:"joinForeignKey:SubscriberID;many2many:subscribes"`
+	Followers      []User    `gorm:"joinForeignKey:UserID;many2many:subscribes"`
 }
 
 type Video struct {
 	gorm.Model
-	VideoStatus string `json:"video_status"`
-	Description string `json:"description"`
-}
-
-type Like struct {
-	gorm.Model
-	UserID  int  `json:"user_id"`
-	VideoID int  `json:"video_id"`
-	Enabled bool `json:"enabled"`
+	AuthorID      uint
+	Description   string    `gorm:"size:30"`
+	Author        User      `gorm:"reference:ID"`
+	UserFavorites []User    `gorm:"many2many:user_favorite_videos"`
+	Comments      []Comment `gorm:"many2many:Comment;joinForeignKey:VideoID"`
 }
 
 type Comment struct {
 	gorm.Model
-	UserID  int    `json:"user_id"`
-	VideoID int    `json:"video_id"`
-	Context string `json:"context"`
-	Enabled bool   `json:"enabled"`
+	UserID  uint
+	VideoID uint
+	Content string `gorm:"size:100"`
 }

@@ -12,6 +12,8 @@ mysql >= 8.0
 git clone https://gitee.com/Whitroom/imitate-tiktok.git
 cd imitate-tiktok
 ```
-2. (1) 如果使用`vscode`，通过`vscode`进入该目录，点击`main.go`后，直接按下`F5`即可运行。
+2. 将`confs/database copy.json`复制一份至原文件下，并重命名为`database.json`，输入数据库账号密码及数据库名称。
+
+3. (1) 如果使用`vscode`，通过`vscode`进入该目录，点击`main.go`后，直接按下`F5`即可运行。
 
 其他仍在补充...

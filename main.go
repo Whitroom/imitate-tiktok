@@ -4,10 +4,14 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"gitee.com/Whitroom/imitate-tiktok/sql"
 )
 
 func main() {
 	r := gin.Default()
+
+	sql.Init()
 
 	initRouter(r)
 
@@ -17,5 +21,5 @@ func main() {
 		})
 	})
 
-	r.Run("localhost:8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	r.Run(":8080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
