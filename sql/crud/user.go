@@ -1,34 +1,34 @@
 package crud
 
 import (
-	"gitee.com/Whitroom/imitate-tiktok/sql"
+	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"gorm.io/gorm"
 )
 
-func CreateUser(db *gorm.DB, user *sql.User) *sql.User {
+func CreateUser(db *gorm.DB, user *models.User) *models.User {
 	db.Create(&user).Commit()
 	return user
 }
 
-func GetUser(db *gorm.DB, id uint64) *sql.User {
-	var user *sql.User
+func GetUser(db *gorm.DB, id uint64) *models.User {
+	var user *models.User
 	db.First(&user, id)
 	return user
 }
 
-func GetUserByName(db *gorm.DB, name string) *sql.User {
-	var user *sql.User
-	db.Where(&sql.User{Name: name}).First(&user)
+func GetUserByName(db *gorm.DB, name string) *models.User {
+	var user *models.User
+	db.Where(&models.User{Name: name}).First(&user)
 	return user
 }
 
-func GetUserSubscribersByName(db *gorm.DB, name string) *sql.User {
-	var user *sql.User
-	db.Where(&sql.User{Name: name}).Preload("Subscribers").Find(&user)
+func GetUserSubscribersByName(db *gorm.DB, name string) *models.User {
+	var user *models.User
+	db.Where(&models.User{Name: name}).Preload("Subscribers").Find(&user)
 	return user
 }
 
-func GetUserFollowersByName(db *gorm.DB, name string) *sql.User {
+func GetUserFollowersByName(db *gorm.DB, name string) *models.User {
 	user := GetUserByName(db, name)
 	db.Raw("select * from users where id in"+
 		"(select user_id from subscribes, `users`"+

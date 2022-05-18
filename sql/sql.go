@@ -8,6 +8,8 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 )
 
 var DB *gorm.DB
@@ -33,6 +35,6 @@ func InitDatabase() {
 	if err != nil {
 		fmt.Println("failed creating database:%w", err)
 	}
-	db.AutoMigrate(&User{}, &Video{}, &Comment{})
+	db.AutoMigrate(&models.User{}, &models.Video{}, &models.Comment{})
 	DB = db
 }
