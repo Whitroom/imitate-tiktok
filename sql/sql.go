@@ -12,7 +12,7 @@ import (
 
 var DB *gorm.DB
 
-func Init() {
+func InitDatabase() {
 
 	type connection struct {
 		Account  string `json:"account"`
