@@ -11,7 +11,7 @@ import (
 func main() {
 	r := gin.Default()
 
-	sql.Init()
+	sql.InitDatabase()
 
 	initRouter(r)
 
