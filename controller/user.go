@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"gorm.io/gorm"
@@ -48,16 +49,11 @@ func Register(c *gin.Context) {
 
 	if err := sql.DB.Where("name = ?", user.Name).First(&user).Error; err == gorm.ErrRecordNotFound {
 		var newUser = models.User{
-			Name:           user.Name,
-			Password:       user.Password,
-			Content:        "",
-			Videos:         []models.Video{},
-			Comments:       []models.Comment{},
-			Followers:      []models.User{},
-			FavoriteVideos: []models.Video{},
-			Subscribers:    []models.User{},
+			Name:     user.Name,
+			Password: user.Password,
 		}
 		sql.DB.Create(&newUser)
+		fmt.Println("创建成功！！！！")
 		token := string(newUser.ID) + "+" + string(time.Now().Unix())
 		c.Set("token", token)
 		c.JSON(http.StatusOK, UserLoginResponse{
