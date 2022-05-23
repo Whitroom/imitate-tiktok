@@ -28,6 +28,9 @@ func InitDatabase() {
 	var conn connection
 	json.Unmarshal([]byte(value), &conn)
 
+	conn.Account = "root"
+	conn.Password = "Czz200303"
+	conn.Database = "MyDatabase"
 	dsn := fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s?charset=utf8&parseTime=true",
 		conn.Account, conn.Password, conn.Database) + "&loc=Asia%2fShanghai"
 

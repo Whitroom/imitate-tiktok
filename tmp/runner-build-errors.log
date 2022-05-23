@@ -1,0 +1,5 @@
+# gitee.com/Whitroom/imitate-tiktok/controller
+controller\user.go:44:5: syntax error: unexpected ), expecting expression
+controller\user.go:45:2: syntax error: unexpected if, expecting expression
+controller\user.go:64:6: syntax error: unexpected Login, expecting (
+controller\user.go:83:6: syntax error: unexpected UserInfo, expecting (
