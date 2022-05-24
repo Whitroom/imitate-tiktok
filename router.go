@@ -2,6 +2,7 @@ package main
 
 import (
 	"gitee.com/Whitroom/imitate-tiktok/controller"
+	"gitee.com/Whitroom/imitate-tiktok/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,22 +13,29 @@ func initRouter(r *gin.Engine) {
 
 	apiRouter := r.Group("/douyin")
 
+	// 不需要token校验的接口
 	// basic apis
 	apiRouter.GET("/feed/", controller.Feed)
 	apiRouter.GET("/user/", controller.UserInfo)
 	apiRouter.POST("/user/register/", controller.Register)
 	apiRouter.POST("/user/login/", controller.Login)
-	apiRouter.POST("/publish/action/", controller.Publish)
-	apiRouter.GET("/publish/list/", controller.PublishList)
 
 	// extra apis - I
-	apiRouter.POST("/favorite/action/", controller.FavoriteAction)
-	apiRouter.GET("/favorite/list/", controller.FavoriteList)
-	apiRouter.POST("/comment/action/", controller.CommentAction)
 	apiRouter.GET("/comment/list/", controller.CommentList)
 
+	// 需要token校验的接口
+	// basic apis
+	auth := apiRouter.Group("/", middlewares.AuthUser())
+	auth.POST("/publish/action/", controller.Publish)
+	auth.GET("/publish/list/", controller.PublishList)
+
+	// extra apis - I
+	auth.POST("/favorite/action/", controller.FavoriteAction)
+	auth.GET("/favorite/list/", controller.FavoriteList)
+	auth.POST("/comment/action/", controller.CommentAction)
+
 	// extra apis - II
-	apiRouter.POST("/relation/action/", controller.RelationAction)
-	apiRouter.GET("/relation/follow/list/", controller.FollowList)
-	apiRouter.GET("/relation/follower/list/", controller.FollowerList)
+	auth.POST("/relation/action/", controller.RelationAction)
+	auth.GET("/relation/follow/list/", controller.FollowList)
+	auth.GET("/relation/follower/list/", controller.FollowerList)
 }
