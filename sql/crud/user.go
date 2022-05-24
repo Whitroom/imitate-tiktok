@@ -12,12 +12,11 @@ func CreateUser(db *gorm.DB, user *models.User) *models.User {
 	return user
 }
 
-func GetUserByID(db *gorm.DB, user_id uint64) (*models.User, error) {
+func GetUserByID(db *gorm.DB, userID uint) (*models.User, error) {
 	var user *models.User
-	db.First(&user, user_id)
+	db.First(&user, userID)
 	if user == nil {
-		err := fmt.Errorf("未找到用户")
-		return nil, err
+		return nil, fmt.Errorf("未找到用户")
 	}
 	return user, nil
 }
@@ -28,33 +27,31 @@ func GetUsersByName(db *gorm.DB, name string) []models.User {
 	return users
 }
 
-func SubscribeUser(db *gorm.DB, user_id uint, subscriber_user_id uint) (*models.User, error) {
+func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.User, error) {
 	var subscriber, user *models.User
-	db.First(&subscriber, subscriber_user_id)
-	db.First(&user, user_id)
+	db.First(&subscriber, subscriberUserID)
+	db.First(&user, userID)
 	if subscriber == nil {
-		err := fmt.Errorf("未找到关注人")
-		return nil, err
+		return nil, fmt.Errorf("未找到关注人")
 	}
 	if user == nil {
-		err := fmt.Errorf("未找到用户")
-		return nil, err
+		return nil, fmt.Errorf("未找到用户")
 	}
 	db.Model(&user).Association("Subscriber").Append(&subscriber)
 	return user, nil
 }
 
-func GetUserSubscribersByID(db *gorm.DB, user_id uint) []models.User {
+func GetUserSubscribersByID(db *gorm.DB, userID uint) []models.User {
 	var user *models.User
-	db.Preload("Subscribers").Find(&user, user_id)
+	db.Preload("Subscribers").Find(&user, userID)
 	return user.Subscribers
 }
 
-func GetUserFollowersByName(db *gorm.DB, user_id uint) []models.User {
+func GetUserFollowersByName(db *gorm.DB, userID uint) []models.User {
 	var followers []models.User
 	db.Raw("select * from users where id in"+
 		"(select user_id from subscribes left join `users`"+
 		"on `users`.id = subscriber_id "+
-		"where subscriber_id = ?)", user_id).Scan(&followers)
+		"where subscriber_id = ?)", userID).Scan(&followers)
 	return followers
 }
