@@ -2,9 +2,10 @@ package controller
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"path/filepath"
+
+	"github.com/gin-gonic/gin"
 )
 
 type VideoListResponse struct {
@@ -28,6 +29,11 @@ func Publish(c *gin.Context) {
 			StatusMsg:  err.Error(),
 		})
 		return
+	}
+
+	title := c.PostForm("title")
+	if title == "" {
+		c.JSON(http.StatusBadRequest, Response{StatusCode: 2, StatusMsg: "Title not Found"})
 	}
 
 	filename := filepath.Base(data.Filename)
