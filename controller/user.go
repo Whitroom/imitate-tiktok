@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
@@ -48,9 +49,10 @@ func Register(c *gin.Context) {
 	}
 
 	if err := sql.DB.Where("name = ?", user.Name).First(&user).Error; err == gorm.ErrRecordNotFound {
+		hashcode := hashEncode(user.Password)
 		var newUser = models.User{
 			Name:     user.Name,
-			Password: user.Password,
+			Password: hashcode,
 		}
 		sql.DB.Create(&newUser)
 		fmt.Println("创建成功！！！！")
@@ -101,8 +103,8 @@ func Login(c *gin.Context) {
 			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
 	}
-
-	if existedUser.Password != user.Password {
+	pwdMatch := comparePasswords(user.Password, existedUser.Password)
+	if pwdMatch != true {
 		c.JSON(401, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "password is incorrect"},
 		})
@@ -159,4 +161,18 @@ func UserInfo(c *gin.Context) {
 	//		Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 	//	})
 	//}
+}
+func hashEncode(str string) string {
+	hash, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println("failed to hash:%w", err)
+	}
+	return string(hash)
+}
+func comparePasswords(sourcePwd, hashPwd string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashPwd), []byte(sourcePwd))
+	if err != nil {
+		return false
+	}
+	return true
 }
