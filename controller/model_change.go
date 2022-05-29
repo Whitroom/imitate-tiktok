@@ -12,8 +12,7 @@ func UserModelChange(user models.User) User {
 		Name:          user.Name,
 		FollowCount:   crud.GetUserSubscribersCountByID(sql.DB, user.ID),
 		FollowerCount: crud.GetUserFollowersCountByID(sql.DB, user.ID),
-		// 以下是测试数据
-		IsFollow: false,
+		IsFollow:      true,
 	}
 }
 
@@ -23,8 +22,7 @@ func UserPointerModelChange(user *models.User) User {
 		Name:          user.Name,
 		FollowCount:   crud.GetUserSubscribersCountByID(sql.DB, user.ID),
 		FollowerCount: crud.GetUserFollowersCountByID(sql.DB, user.ID),
-		// 以下是测试数据
-		IsFollow: false,
+		IsFollow:      true,
 	}
 }
 
@@ -52,9 +50,9 @@ func VideoModelChange(video *models.Video) Video {
 		FavoriteCount: crud.GetVideoLikesCount(sql.DB, video.ID),
 		Author:        UserModelChange(video.Author),
 		CommentCount:  crud.GetVideoCommentsCountByID(sql.DB, video.ID),
+		IsFavorite:    true,
 		// 以下是测试数据
-		PlayUrl:    "",
-		CoverUrl:   "",
-		IsFavorite: true,
+		PlayUrl:  "",
+		CoverUrl: "",
 	}
 }
