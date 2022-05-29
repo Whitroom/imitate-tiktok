@@ -20,7 +20,7 @@ func InitSecret() {
 	json.Unmarshal([]byte(value), &map[string][]byte{"secret": Secret})
 }
 
-// 验证用户中间件, 若没有token会返回400, 验证失败会返回401, 找不到用户会返回404, 响应code为1和2
+// 验证用户中间件, 若没有token会返回400, 验证失败会返回401, 找不到用户会返回404, 响应code为1, 2, 3
 func AuthUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token := ctx.Query("token")
@@ -35,7 +35,7 @@ func AuthUser() gin.HandlerFunc {
 		UserID, err := Parse(token)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"code":    1,
+				"code":    2,
 				"message": "token获取错误, 请重新登陆获取",
 			})
 			ctx.Abort()
@@ -44,7 +44,7 @@ func AuthUser() gin.HandlerFunc {
 		User, err := crud.GetUserByID(sql.DB, UserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, gin.H{
-				"code":    2,
+				"code":    3,
 				"message": "token解析错误, 请重新登陆获取",
 			})
 			ctx.Abort()
