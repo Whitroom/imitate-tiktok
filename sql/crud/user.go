@@ -37,7 +37,7 @@ func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.Use
 	if user == nil {
 		return nil, fmt.Errorf("未找到用户")
 	}
-	db.Model(&user).Association("Subscriber").Append(&subscriber)
+	db.Model(&user).Association("Subscribers").Append(&subscriber)
 	return user, nil
 }
 
@@ -47,11 +47,17 @@ func GetUserSubscribersByID(db *gorm.DB, userID uint) []models.User {
 	return user.Subscribers
 }
 
-func GetUserFollowersByName(db *gorm.DB, userID uint) []models.User {
+func GetUserFollowersById(db *gorm.DB, userID uint) []models.User {
 	var followers []models.User
 	db.Raw("select * from users where id in"+
 		"(select user_id from subscribes left join `users`"+
 		"on `users`.id = subscriber_id "+
 		"where subscriber_id = ?)", userID).Scan(&followers)
 	return followers
+}
+
+func GetVideoByAuthorID(db *gorm.DB, userID uint) []models.Video {
+	var user *models.User
+	db.Preload("Videos").Find(&user, userID)
+	return user.Videos
 }

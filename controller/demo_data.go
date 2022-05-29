@@ -10,6 +10,14 @@ var DemoVideos = []Video{
 		CommentCount:  0,
 		IsFavorite:    false,
 	},
+	//{
+	//	Id:            2,
+	//	Author:        DemoUser,
+	//	PlayUrl:       "http://192.168.50.45:8080/static/2_ai.mp4",
+	//	FavoriteCount: 0,
+	//	CommentCount:  0,
+	//	IsFavorite:    false,
+	//},
 }
 
 var DemoComments = []Comment{

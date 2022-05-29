@@ -12,8 +12,33 @@ type FeedResponse struct {
 	NextTime  int64   `json:"next_time,omitempty"`
 }
 
-// Feed same demo video list for every request
 func Feed(c *gin.Context) {
+	//var videoList []Video
+
+	//get videoName form public directory
+	//FilesName, err := GetAllFile("public", []string{})
+	//if err != nil {
+	//	fmt.Printf("file error %w", err)
+	//	return
+	//}
+
+	//
+	//for _, fileName := range FilesName {
+	//	video:=Video{
+	//		Author: ,
+	//		PlayUrl: fmt.Sprintf("http://%v:8080/static/%v",,fileName),
+	//		FavoriteCount: ,
+	//		CommentCount: ,
+	//		IsFavorite: ,
+	//	}
+	//}
+
+	//c.JSON(http.StatusOK, FeedResponse{
+	//	Response:  Response{StatusCode: 0},
+	//	VideoList: videoList,
+	//	NextTime:  time.Now().Unix(),
+	//})
+
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  Response{StatusCode: 0},
 		VideoList: DemoVideos,
