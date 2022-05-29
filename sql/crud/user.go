@@ -23,7 +23,7 @@ func GetUserByID(db *gorm.DB, userID uint) (*models.User, error) {
 
 func GetUsersByName(db *gorm.DB, name string) []models.User {
 	var users []models.User
-	db.Where(&models.User{Name: name}).First(&users)
+	db.Where(&models.User{Name: name}).Find(&users)
 	return users
 }
 
@@ -37,7 +37,7 @@ func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.Use
 	if user == nil {
 		return nil, fmt.Errorf("未找到用户")
 	}
-	db.Model(&user).Association("Subscriber").Append(&subscriber)
+	db.Model(&user).Association("Subscribers").Append(&subscriber)
 	return user, nil
 }
 
@@ -47,11 +47,34 @@ func GetUserSubscribersByID(db *gorm.DB, userID uint) []models.User {
 	return user.Subscribers
 }
 
-func GetUserFollowersByName(db *gorm.DB, userID uint) []models.User {
+func GetUserSubscribersCountByID(db *gorm.DB, userID uint) int64 {
+	var count int64
+	var user *models.User
+	db.Preload("Subscribers").Find(&user, userID).Count(&count)
+	return count
+}
+
+func GetUserFollowersByID(db *gorm.DB, userID uint) []models.User {
 	var followers []models.User
 	db.Raw("select * from users where id in"+
 		"(select user_id from subscribes left join `users`"+
 		"on `users`.id = subscriber_id "+
 		"where subscriber_id = ?)", userID).Scan(&followers)
 	return followers
+}
+
+func GetUserFollowersCountByID(db *gorm.DB, userID uint) int64 {
+	var count int64
+	db.Raw("select * from users where id in"+
+		"(select user_id from subscribes left join `users`"+
+		"on `users`.id = subscriber_id "+
+		"where subscriber_id = ?)", userID).Count(&count)
+	return count
+}
+
+func IsUserFollow(db *gorm.DB, userID, anotherUserID uint) bool {
+	var user *models.User
+	db.Raw("select * from user where id in"+
+		" (select user_id from subscribes where user_id = ? and subscriber_id = ?)", userID, anotherUserID).Scan(&user)
+	return user != nil
 }
