@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
 	"gitee.com/Whitroom/imitate-tiktok/sql"
+	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -55,7 +56,7 @@ func Register(c *gin.Context) {
 			Name:     user.Name,
 			Password: hashcode,
 		}
-		sql.DB.Create(&newUser)
+		crud.CreateUser(sql.DB, &newUser)
 		fmt.Println("创建成功！！！！")
 		token, _ := middlewares.Sign(newUser.ID)
 		c.Set("token", token)

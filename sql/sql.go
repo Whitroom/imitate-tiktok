@@ -30,7 +30,7 @@ func InitDatabase() {
 
 	conn.Account = "root"
 	conn.Password = "Czz200303"
-	conn.Database = "mydatabase"
+	conn.Database = "sys"
 	dsn := fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s?charset=utf8&parseTime=true",
 		conn.Account, conn.Password, conn.Database) + "&loc=Asia%2fShanghai"
 
