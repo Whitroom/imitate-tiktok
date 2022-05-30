@@ -6,6 +6,14 @@ import (
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 )
 
+func UsersModelChange(Users []models.User) []User {
+	var users []User
+	for _, user := range Users {
+		users = append(users, UserModelChange(user))
+	}
+	return users
+}
+
 func UserModelChange(user models.User) User {
 	return User{
 		Id:            int64(user.ID),
