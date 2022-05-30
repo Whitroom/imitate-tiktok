@@ -5,7 +5,7 @@ import "gorm.io/gorm"
 type User struct {
 	gorm.Model
 	Name           string    `gorm:"size:10"`
-	Password       string    `gorm:"size:40"`
+	Password       string    `gorm:"size:60"`
 	Content        string    `gorm:"size:50"`
 	Videos         []Video   `gorm:"ForeignKey:AuthorID"`
 	Comments       []Comment `gorm:"many2many:comments;joinForeignKey:UserID"`
