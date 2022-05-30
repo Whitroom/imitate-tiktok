@@ -2,13 +2,13 @@ package controller
 
 import (
 	"fmt"
+	"gitee.com/Whitroom/imitate-tiktok/middlewares"
 	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,9 +43,10 @@ func Register(c *gin.Context) {
 
 	var user models.User
 	if err := c.ShouldBindQuery(&user); err != nil {
-		c.JSON(400, UserLoginResponse{
+		c.JSON(http.StatusBadRequest, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "bind failed"},
 		})
+		return
 	}
 
 	if err := sql.DB.Where("name = ?", user.Name).First(&user).Error; err == gorm.ErrRecordNotFound {
@@ -56,17 +57,19 @@ func Register(c *gin.Context) {
 		}
 		sql.DB.Create(&newUser)
 		fmt.Println("创建成功！！！！")
-		token := string(newUser.ID) + "+" + string(time.Now().Unix())
+		token, _ := middlewares.Sign(newUser.ID)
 		c.Set("token", token)
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 0},
 			UserId:   userIdSequence,
 			Token:    token,
 		})
+		return
 	} else if err == nil {
-		c.JSON(403, UserLoginResponse{
+		c.JSON(http.StatusForbidden, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User is exist"},
 		})
+		return
 	}
 
 	//if _, exist := usersLoginInfo[token]; exist {
@@ -86,36 +89,41 @@ func Register(c *gin.Context) {
 	//		Token:    username + password,
 	//	})
 	//}
+	return
 }
 
 func Login(c *gin.Context) {
 
 	var user models.User
 	if err := c.ShouldBindQuery(&user); err != nil {
-		c.JSON(400, UserLoginResponse{
+		c.JSON(http.StatusBadRequest, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "bind failed"},
 		})
+		return
 	}
 	var existedUser models.User
 
 	if err := sql.DB.Where("name = ?", user.Name).First(&existedUser).Error; err == gorm.ErrRecordNotFound {
-		c.JSON(404, UserLoginResponse{
+		c.JSON(http.StatusNotFound, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
+		return
 	}
 	pwdMatch := comparePasswords(user.Password, existedUser.Password)
 	if pwdMatch != true {
-		c.JSON(401, UserLoginResponse{
+		c.JSON(http.StatusUnauthorized, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "password is incorrect"},
 		})
+		return
 	}
-	token := string(existedUser.ID) + "+" + string(time.Now().Unix())
+	token, _ := middlewares.Sign(existedUser.ID)
 	c.Set("token", token)
-	c.JSON(200, UserLoginResponse{
+	c.JSON(http.StatusOK, UserLoginResponse{
 		Response: Response{StatusCode: 0},
 		UserId:   int64(existedUser.ID),
 		Token:    token,
 	})
+	return
 	//if user, exist := usersLoginInfo[token]; exist {
 	//	c.JSON(http.StatusOK, UserLoginResponse{
 	//		Response: Response{StatusCode: 0},
@@ -135,22 +143,25 @@ func UserInfo(c *gin.Context) {
 	var err error
 	str := c.Query("user_id")
 	if userId, err = strconv.ParseUint(str, 0, len(str)); err != nil {
-		c.JSON(400, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	var user models.User
 	if err = sql.DB.First(&user, uint(userId)).Error; err == gorm.ErrRecordNotFound {
-		c.JSON(404, UserResponse{
+		c.JSON(http.StatusNotFound, UserResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
+		return
 	} else if err == nil {
-		c.JSON(200, UserResponse{
+		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 0},
 			User:     user,
 		})
+		return
 	}
-
+	return
 	//if user, exist := usersLoginInfo[token]; exist {
 	//	c.JSON(http.StatusOK, UserResponse{
 	//		Response: Response{StatusCode: 0},
