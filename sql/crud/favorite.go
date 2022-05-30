@@ -24,7 +24,7 @@ func UserLikeVideo(db *gorm.DB, UserID uint, VideoID uint) error {
 	return nil
 }
 
-func UserDislikeVideo(db *gorm.DB, UserID uint, VideoID int) (*models.User, error) {
+func UserDislikeVideo(db *gorm.DB, UserID uint, VideoID uint) error {
 	var user *models.User
 	var video *models.Video
 
@@ -32,13 +32,16 @@ func UserDislikeVideo(db *gorm.DB, UserID uint, VideoID int) (*models.User, erro
 	db.First(&video, VideoID)
 
 	if user == nil || video == nil {
-		return nil, fmt.Errorf("找不到用户或视频")
+		return fmt.Errorf("找不到用户或视频")
 	}
 
-	db.Model(&user).Association("FavoriteVideos").Delete(&video)
+	err := db.Model(&user).Association("FavoriteVideos").Delete(&video)
+	if err != nil {
+		return fmt.Errorf("找不到点赞的视频")
+	}
 	db.Commit()
 
-	return user, nil
+	return nil
 }
 
 func GetUserLikeVideosByUserID(db *gorm.DB, UserID uint) []models.Video {

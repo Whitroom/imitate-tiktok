@@ -17,29 +17,38 @@ type FavoriteActionRequest struct {
 
 // FavoriteAction no practical effect, just check if token is valid
 func FavoriteAction(ctx *gin.Context) {
-	var action FavoriteActionRequest
-	if err := ctx.ShouldBindQuery(&action); err != nil {
+	var request FavoriteActionRequest
+	if err := ctx.ShouldBindQuery(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 1,
-			StatusMsg:  err.Error(),
+			StatusMsg:  "数据绑定失败",
 		})
 		return
 	}
 
-	user, _ := ctx.Get("user")
-	user_ := user.(*models.User)
-
-	if err := crud.UserLikeVideo(sql.DB, user_.ID, action.VideoID); err != nil {
-		ctx.JSON(http.StatusNotFound, Response{
-			StatusCode: 2,
-			StatusMsg:  err.Error(),
-		})
-		return
+	user, _ := ctx.Get("User")
+	user_, _ := user.(*models.User)
+	if request.ActionType == 1 {
+		if err := crud.UserLikeVideo(sql.DB, user_.ID, request.VideoID); err != nil {
+			ctx.JSON(http.StatusNotFound, Response{
+				StatusCode: 2,
+				StatusMsg:  err.Error(),
+			})
+			return
+		}
+	} else {
+		if err := crud.UserDislikeVideo(sql.DB, user_.ID, request.VideoID); err != nil {
+			ctx.JSON(http.StatusNotFound, Response{
+				StatusCode: 3,
+				StatusMsg:  err.Error(),
+			})
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusOK, Response{
 		StatusCode: 0,
-		StatusMsg:  "点赞成功",
+		StatusMsg:  "操作成功",
 	})
 
 }
