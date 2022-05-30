@@ -1,15 +1,31 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
-	"sync/atomic"
+	"strconv"
 
+	"gitee.com/Whitroom/imitate-tiktok/middlewares"
+	"gitee.com/Whitroom/imitate-tiktok/sql"
+	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
+	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
-// usersLoginInfo use map to store user info, and key is username+password for demo
-// user data will be cleared every time the server starts
-// test data: username=zhanglei, password=douyin
+func hashEncode(str string) string {
+	hash, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println("failed to hash:%w", err)
+	}
+	return string(hash)
+}
+
+func comparePasswords(sourcePwd, hashPwd string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashPwd), []byte(sourcePwd))
+	return err == nil
+}
+
 var usersLoginInfo = map[string]User{
 	"zhangleidouyin": {
 		Id:            1,
@@ -19,8 +35,6 @@ var usersLoginInfo = map[string]User{
 		IsFollow:      true,
 	},
 }
-
-var userIdSequence = int64(1)
 
 type UserLoginResponse struct {
 	Response
@@ -33,61 +47,140 @@ type UserResponse struct {
 	User User `json:"user"`
 }
 
-func Register(c *gin.Context) {
-	username := c.Query("username")
-	password := c.Query("password")
-
-	token := username + password
-
-	if _, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User already exist"},
-		})
-	} else {
-		atomic.AddInt64(&userIdSequence, 1)
-		newUser := User{
-			Id:   userIdSequence,
-			Name: username,
-		}
-		usersLoginInfo[token] = newUser
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
-			UserId:   userIdSequence,
-			Token:    username + password,
-		})
-	}
+type RegisterRequest struct {
+	Username string `json:"username" binding:"required" form:"username"`
+	Password string `json:"password" binding:"required" form:"password"`
 }
 
-func Login(c *gin.Context) {
-	username := c.Query("username")
-	password := c.Query("password")
-
-	token := username + password
-
-	if user, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
-			UserId:   user.Id,
-			Token:    token,
+func Register(ctx *gin.Context) {
+	var user RegisterRequest
+	if err := ctx.ShouldBindQuery(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, Response{
+			StatusCode: 1,
+			StatusMsg:  "绑定失败",
 		})
-	} else {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
-		})
+		return
 	}
+
+	if crud.GetUserByName(sql.DB, user.Username) == nil {
+		ctx.JSON(http.StatusBadRequest, Response{
+			StatusCode: 2,
+			StatusMsg:  "存在用户姓名",
+		})
+		return
+	}
+
+	newUser := &models.User{
+		Name:     user.Username,
+		Password: hashEncode(user.Password),
+		Content:  "",
+	}
+
+	newUser = crud.CreateUser(sql.DB, newUser)
+
+	token, err := middlewares.Sign(newUser.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, Response{
+			StatusCode: 3,
+			StatusMsg:  "token创建失败",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, UserLoginResponse{
+		Response: Response{
+			StatusCode: 0,
+			StatusMsg:  "用户创建成功",
+		},
+		UserId: int64(newUser.ID),
+		Token:  token,
+	})
 }
 
-func UserInfo(c *gin.Context) {
-	token := c.Query("token")
-
-	if user, exist := usersLoginInfo[token]; exist {
-		c.JSON(http.StatusOK, UserResponse{
-			Response: Response{StatusCode: 0},
-			User:     user,
+func Login(ctx *gin.Context) {
+	var user RegisterRequest
+	if err := ctx.ShouldBindQuery(&user); err != nil {
+		ctx.JSON(400, UserLoginResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "绑定失败"},
 		})
-	} else {
-		c.JSON(http.StatusOK, UserResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
-		})
+		return
 	}
+	existedUser := crud.GetUserByName(sql.DB, user.Username)
+
+	if existedUser == nil {
+		ctx.JSON(http.StatusNotFound, Response{
+			StatusCode: 1,
+			StatusMsg:  "找不到用户",
+		})
+		return
+	}
+
+	pwdMatch := comparePasswords(user.Password, existedUser.Password)
+	if !pwdMatch {
+		ctx.JSON(http.StatusUnauthorized, UserLoginResponse{
+			Response: Response{
+				StatusCode: 2,
+				StatusMsg:  "用户名或密码错误",
+			},
+		})
+		return
+	}
+
+	token, err := middlewares.Sign(existedUser.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, Response{
+			StatusCode: 3,
+			StatusMsg:  "token创建失败",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, UserLoginResponse{
+		Response: Response{StatusCode: 0},
+		UserId:   int64(existedUser.ID),
+		Token:    token,
+	})
+}
+
+func UserInfo(ctx *gin.Context) {
+
+	token := ctx.Query("token")
+	var user *models.User
+	var userID uint
+	if token != "" {
+		userID, _ = middlewares.Parse(token)
+		user, _ = crud.GetUserByID(sql.DB, userID)
+	}
+
+	toUserIDStr := ctx.Query("user_id")
+	toUserID_, err := strconv.ParseUint(toUserIDStr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, Response{
+			StatusCode: 2,
+			StatusMsg:  "user_id错误" + err.Error(),
+		})
+		return
+	}
+
+	toUserID := uint(toUserID_)
+
+	toUser, err := crud.GetUserByID(sql.DB, toUserID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, Response{
+			StatusCode: 3,
+			StatusMsg:  "找不到用户",
+		})
+		return
+	}
+
+	responseUser := UserPointerModelChange(toUser)
+	responseUser.IsFollow = crud.IsUserFollow(sql.DB, user.ID, userID)
+	ctx.JSON(http.StatusOK, UserResponse{
+		Response: Response{
+			StatusCode: 0,
+			StatusMsg:  "已找到用户",
+		},
+		User: responseUser,
+	})
+
 }

@@ -21,10 +21,10 @@ func GetUserByID(db *gorm.DB, userID uint) (*models.User, error) {
 	return user, nil
 }
 
-func GetUsersByName(db *gorm.DB, name string) []models.User {
-	var users []models.User
-	db.Where(&models.User{Name: name}).Find(&users)
-	return users
+func GetUserByName(db *gorm.DB, name string) *models.User {
+	var user *models.User
+	db.Where(&models.User{Name: name}).Find(&user)
+	return user
 }
 
 func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.User, error) {
@@ -48,10 +48,9 @@ func GetUserSubscribersByID(db *gorm.DB, userID uint) []models.User {
 }
 
 func GetUserSubscribersCountByID(db *gorm.DB, userID uint) int64 {
-	var count int64
 	var user *models.User
-	db.Preload("Subscribers").Find(&user, userID).Count(&count)
-	return count
+	db.Preload("Subscribers").Find(&user, userID)
+	return int64(len(user.Subscribers))
 }
 
 func GetUserFollowersByID(db *gorm.DB, userID uint) []models.User {
@@ -73,6 +72,9 @@ func GetUserFollowersCountByID(db *gorm.DB, userID uint) int64 {
 }
 
 func IsUserFollow(db *gorm.DB, userID, anotherUserID uint) bool {
+	if userID == anotherUserID {
+		return false
+	}
 	var user *models.User
 	db.Raw("select * from user where id in"+
 		" (select user_id from subscribes where user_id = ? and subscriber_id = ?)", userID, anotherUserID).Scan(&user)
