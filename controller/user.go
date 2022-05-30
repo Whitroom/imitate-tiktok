@@ -100,8 +100,11 @@ func Register(ctx *gin.Context) {
 func Login(ctx *gin.Context) {
 	var user RegisterRequest
 	if err := ctx.ShouldBindQuery(&user); err != nil {
-		ctx.JSON(400, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "绑定失败"},
+		ctx.JSON(http.StatusBadRequest, UserLoginResponse{
+			Response: Response{
+				StatusCode: 1,
+				StatusMsg:  "绑定失败",
+			},
 		})
 		return
 	}
@@ -142,6 +145,8 @@ func Login(ctx *gin.Context) {
 	})
 }
 
+// 查询用户信息接口函数。
+// 如果token存在，则需要通过crud.IsUserFollow来确定是否关注。
 func UserInfo(ctx *gin.Context) {
 
 	token := ctx.Query("token")
@@ -152,8 +157,7 @@ func UserInfo(ctx *gin.Context) {
 		user, _ = crud.GetUserByID(sql.DB, userID)
 	}
 
-	toUserIDStr := ctx.Query("user_id")
-	toUserID_, err := strconv.ParseUint(toUserIDStr, 10, 64)
+	toUserID_, err := strconv.ParseUint(ctx.Query("user_id"), 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 2,
@@ -174,7 +178,12 @@ func UserInfo(ctx *gin.Context) {
 	}
 
 	responseUser := UserPointerModelChange(toUser)
-	responseUser.IsFollow = crud.IsUserFollow(sql.DB, user.ID, userID)
+	if user != nil {
+		responseUser.IsFollow = crud.IsUserFollow(sql.DB, user.ID, userID)
+	} else {
+		responseUser.IsFollow = false
+	}
+
 	ctx.JSON(http.StatusOK, UserResponse{
 		Response: Response{
 			StatusCode: 0,

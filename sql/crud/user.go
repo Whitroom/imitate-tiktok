@@ -41,6 +41,23 @@ func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.Use
 	return user, nil
 }
 
+func CancelSubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.User, error) {
+	var subscriber, user *models.User
+	db.First(&subscriber, subscriberUserID)
+	db.First(&user, userID)
+	if subscriber == nil {
+		return nil, fmt.Errorf("未找到关注人")
+	}
+	if user == nil {
+		return nil, fmt.Errorf("未找到用户")
+	}
+	err := db.Model(&user).Association("Subscribers").Delete(&subscriber)
+	if err != nil {
+		return nil, fmt.Errorf("关注不存在")
+	}
+	return user, nil
+}
+
 func GetUserSubscribersByID(db *gorm.DB, userID uint) []models.User {
 	var user *models.User
 	db.Preload("Subscribers").Find(&user, userID)
