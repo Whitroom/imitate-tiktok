@@ -17,13 +17,6 @@ type FavoriteActionRequest struct {
 
 // FavoriteAction no practical effect, just check if token is valid
 func FavoriteAction(ctx *gin.Context) {
-	// token := c.Query("token")
-
-	// if _, exist := usersLoginInfo[token]; exist {
-	// 	c.JSON(http.StatusOK, Response{StatusCode: 0})
-	// } else {
-	// 	c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
-	// }
 	var action FavoriteActionRequest
 	if err := ctx.ShouldBindQuery(&action); err != nil {
 		ctx.JSON(http.StatusBadRequest, Response{
@@ -54,8 +47,8 @@ func FavoriteAction(ctx *gin.Context) {
 // FavoriteList all users have same favorite video list
 func FavoriteList(ctx *gin.Context) {
 
-	user, _ := ctx.Get("user")
-	user_ := user.(*models.User)
+	user, _ := ctx.Get("User")
+	user_, _ := user.(*models.User)
 
 	videos := crud.GetUserLikeVideosByUserID(sql.DB, user_.ID)
 
@@ -65,11 +58,4 @@ func FavoriteList(ctx *gin.Context) {
 		},
 		VideoList: VideosModelChange(videos),
 	})
-
-	// ctx.JSON(http.StatusOK, VideoListResponse{
-	// 	Response: Response{
-	// 		StatusCode: 0,
-	// 	},
-	// 	VideoList: DemoVideos,
-	// })
 }
