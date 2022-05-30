@@ -17,7 +17,7 @@ type User struct {
 type Video struct {
 	gorm.Model
 	AuthorID      uint
-	Description   string    `gorm:"size:30"`
+	Title         string    `gorm:"size:30"`
 	Author        User      `gorm:"reference:ID"`
 	UserFavorites []User    `gorm:"many2many:user_favorite_videos"`
 	Comments      []Comment `gorm:"many2many:Comment;joinForeignKey:VideoID"`
