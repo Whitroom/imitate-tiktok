@@ -34,8 +34,8 @@ func Parse(tokenString string) (uint, error) {
 	if !(ok && token.Valid) {
 		return 0, fmt.Errorf("转换失败")
 	}
-	userID := claims["id"].(uint)
-	createTime := claims["nbf"].(int64)
+	userID := uint(claims["id"].(float64))
+	createTime, _ := claims["nbf"].(int64)
 
 	if time.Now().Unix()-createTime > 2*int64(time.Hour) {
 		return 0, fmt.Errorf("token令牌超时")

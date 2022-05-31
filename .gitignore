@@ -24,3 +24,7 @@ go.work
 
 # Database Config
 confs/database.json
+
+# Static Files
+public/*.mp4
+!/public/bear.mp4
