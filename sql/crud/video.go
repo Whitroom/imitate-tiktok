@@ -2,6 +2,7 @@ package crud
 
 import (
 	"fmt"
+	"time"
 
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"gorm.io/gorm"
@@ -10,6 +11,26 @@ import (
 func CreateVideo(db *gorm.DB, video *models.Video) *models.Video {
 	db.Create(&video).Commit()
 	return video
+}
+
+func GetVideos(db *gorm.DB, latestTime int64, userID uint) []models.Video {
+	var videos []models.Video
+	statement := db.Preload("Author").Limit(30)
+	if latestTime != 0 {
+		statement = statement.Where("created_at < ?",
+			time.Unix(latestTime/1000+43200, 0).Format("2006-01-02 15:04:05"))
+	}
+	if userID != 0 {
+		statement = statement.Where("author_id != ?", userID)
+	}
+	statement.Order("created_at desc").Find(&videos)
+	return videos
+}
+
+func GetUserPublishVideosByID(db *gorm.DB, userID uint) []models.Video {
+	var videos []models.Video
+	db.Preload("Author").Where("author_id = ?", userID).Find(&videos)
+	return videos
 }
 
 func GetVideoByID(db *gorm.DB, videoID uint) (*models.Video, error) {
@@ -38,7 +59,7 @@ func GetVideoCommentsByID(db *gorm.DB, videoID uint) []models.Comment {
 
 func GetVideoCommentsCountByID(db *gorm.DB, videoID uint) int64 {
 	var count int64
-	db.Raw("select * from comments"+
-		" where video_id = ?", videoID).Count(&count)
+	db.Raw("select count(*) from comments"+
+		" where video_id = ?", videoID).Scan(&count)
 	return count
 }

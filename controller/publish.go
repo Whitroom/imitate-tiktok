@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"gitee.com/Whitroom/imitate-tiktok/middlewares"
+	"gitee.com/Whitroom/imitate-tiktok/sql"
+	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
+	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,52 +18,76 @@ type VideoListResponse struct {
 }
 
 // Publish check token then save upload file to public directory
-func Publish(c *gin.Context) {
-	token := c.Query("token")
+func Publish(ctx *gin.Context) {
 
-	if _, exist := usersLoginInfo[token]; !exist {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
-		return
-	}
-
-	data, err := c.FormFile("data")
+	token := ctx.PostForm("token")
+	userID, err := middlewares.Parse(token)
 	if err != nil {
-		c.JSON(http.StatusOK, Response{
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"code":    2,
+			"message": "token获取错误, 请重新登陆获取",
+		})
+		return
+	}
+
+	data, err := ctx.FormFile("data")
+	if err != nil {
+		ctx.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
 		})
 		return
 	}
 
-	title := c.PostForm("title")
+	if data.Filename[len(data.Filename)-3:] != "mp4" {
+		ctx.JSON(http.StatusBadRequest, Response{
+			StatusCode: 3,
+			StatusMsg:  "不支持的文件格式",
+		})
+		return
+	}
+
+	title := ctx.PostForm("title")
+	fmt.Println(title)
 	if title == "" {
-		c.JSON(http.StatusBadRequest, Response{StatusCode: 2, StatusMsg: "Title not Found"})
+		ctx.JSON(http.StatusBadRequest, Response{StatusCode: 2, StatusMsg: "Title not Found"})
 	}
-
 	filename := filepath.Base(data.Filename)
-	user := usersLoginInfo[token]
-	finalName := fmt.Sprintf("%d_%s", user.Id, filename)
+
+	finalName := fmt.Sprintf("%d_%s_%s", userID, title, filename)
 	saveFile := filepath.Join("./public/", finalName)
-	if err := c.SaveUploadedFile(data, saveFile); err != nil {
-		c.JSON(http.StatusOK, Response{
+	if err := ctx.SaveUploadedFile(data, saveFile); err != nil {
+		ctx.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, Response{
+	crud.CreateVideo(sql.DB, &models.Video{
+		AuthorID: userID,
+		Title:    finalName,
+	})
+
+	ctx.JSON(http.StatusOK, Response{
 		StatusCode: 0,
 		StatusMsg:  finalName + " uploaded successfully",
 	})
 }
 
 // PublishList all users have same publish video list
-func PublishList(c *gin.Context) {
-	c.JSON(http.StatusOK, VideoListResponse{
+func PublishList(ctx *gin.Context) {
+	user_, _ := ctx.Get("User")
+	user, _ := user_.(*models.User)
+	videos := crud.GetUserPublishVideosByID(sql.DB, user.ID)
+	modelVideos := VideosModelChange(videos)
+	for i := 0; i < len(modelVideos); i++ {
+		modelVideos[i].IsFavorite = crud.IsUserFavoriteVideo(sql.DB, user.ID, uint(modelVideos[i].Id))
+	}
+	ctx.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{
 			StatusCode: 0,
 		},
-		VideoList: DemoVideos,
+		VideoList: modelVideos,
 	})
 }

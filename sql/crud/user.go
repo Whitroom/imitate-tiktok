@@ -65,7 +65,8 @@ func GetUserSubscribersByID(db *gorm.DB, userID uint) []models.User {
 
 func GetUserSubscribersCountByID(db *gorm.DB, userID uint) int64 {
 	var count int64
-	db.Raw("select count(subscriber_id) from subscribes where user_id = ?", &userID).Scan(&count)
+	db.Raw("select count(subscriber_id) from subscribes where user_id = ?",
+		userID).Scan(&count)
 	return count
 }
 
@@ -80,7 +81,8 @@ func GetUserFollowersByID(db *gorm.DB, userID uint) []models.User {
 
 func GetUserFollowersCountByID(db *gorm.DB, userID uint) int64 {
 	var count int64
-	db.Raw("select count(user_id) from subscribes where subscriber_id = ?", &userID).Scan(&count)
+	db.Raw("select count(user_id) from subscribes where subscriber_id = ?",
+		&userID).Scan(&count)
 	return count
 }
 
@@ -90,6 +92,7 @@ func IsUserFollow(db *gorm.DB, userID, anotherUserID uint) bool {
 	}
 	var user *models.User
 	db.Raw("select * from users where id in"+
-		" (select user_id from subscribes where user_id = ? and subscriber_id = ?)", userID, anotherUserID).Scan(&user)
+		" (select user_id from subscribes where user_id = ? and subscriber_id = ?)",
+		userID, anotherUserID).Scan(&user)
 	return user != nil
 }

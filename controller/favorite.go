@@ -10,7 +10,7 @@ import (
 )
 
 type FavoriteActionRequest struct {
-	UserID     uint `form:"user_id" binding:"required"`
+	// UserID     uint `form:"user_id" binding:"required"`
 	VideoID    uint `form:"video_id" binding:"required"`
 	ActionType uint `form:"action_type" binding:"required,min=1,max=2"`
 }
@@ -25,11 +25,11 @@ func FavoriteAction(ctx *gin.Context) {
 		})
 		return
 	}
+	user_, _ := ctx.Get("User")
+	user, _ := user_.(*models.User)
 
-	user, _ := ctx.Get("User")
-	user_, _ := user.(*models.User)
 	if request.ActionType == 1 {
-		if err := crud.UserLikeVideo(sql.DB, user_.ID, request.VideoID); err != nil {
+		if err := crud.UserLikeVideo(sql.DB, user.ID, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 2,
 				StatusMsg:  err.Error(),
@@ -37,7 +37,7 @@ func FavoriteAction(ctx *gin.Context) {
 			return
 		}
 	} else {
-		if err := crud.UserDislikeVideo(sql.DB, user_.ID, request.VideoID); err != nil {
+		if err := crud.UserDislikeVideo(sql.DB, user.ID, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 3,
 				StatusMsg:  err.Error(),

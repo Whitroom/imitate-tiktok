@@ -26,15 +26,15 @@ func comparePasswords(sourcePwd, hashPwd string) bool {
 	return err == nil
 }
 
-var usersLoginInfo = map[string]User{
-	"zhangleidouyin": {
-		Id:            1,
-		Name:          "zhanglei",
-		FollowCount:   10,
-		FollowerCount: 5,
-		IsFollow:      true,
-	},
-}
+// var usersLoginInfo = map[string]User{
+// 	"zhangleidouyin": {
+// 		Id:            1,
+// 		Name:          "zhanglei",
+// 		FollowCount:   10,
+// 		FollowerCount: 5,
+// 		IsFollow:      true,
+// 	},
+// }
 
 type UserLoginResponse struct {
 	Response
@@ -171,7 +171,7 @@ func UserInfo(ctx *gin.Context) {
 		return
 	}
 
-	responseUser := UserPointerModelChange(toUser)
+	responseUser := UserModelChange(*toUser)
 	if user != nil {
 		responseUser.IsFollow = crud.IsUserFollow(sql.DB, user.ID, toUserID)
 	} else {

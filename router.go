@@ -24,8 +24,8 @@ func initRouter(r *gin.Engine) {
 
 	// 需要token校验的接口
 	// basic apis
+	apiRouter.POST("/publish/action/", controller.Publish)
 	auth := apiRouter.Group("/", middlewares.AuthUser())
-	auth.POST("/publish/action/", controller.Publish)
 	auth.GET("/publish/list/", controller.PublishList)
 	auth.GET("/user/", controller.UserInfo) // 完成
 

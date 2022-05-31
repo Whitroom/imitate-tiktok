@@ -24,14 +24,12 @@ func UserModelChange(user models.User) User {
 	}
 }
 
-func UserPointerModelChange(user *models.User) User {
-	return User{
-		Id:            int64(user.ID),
-		Name:          user.Name,
-		FollowCount:   crud.GetUserSubscribersCountByID(sql.DB, user.ID),
-		FollowerCount: crud.GetUserFollowersCountByID(sql.DB, user.ID),
-		IsFollow:      true,
+func CommentsModelChange(Comments []models.Comment) []Comment {
+	var comments []Comment
+	for _, comment := range Comments {
+		comments = append(comments, CommentModelChange(comment))
 	}
+	return comments
 }
 
 func CommentModelChange(comment models.Comment) Comment {
@@ -40,7 +38,7 @@ func CommentModelChange(comment models.Comment) Comment {
 		Id:         int64(comment.ID),
 		Content:    comment.Content,
 		CreateDate: comment.CreatedAt.Format("2006-01-02 15:04:05"),
-		User:       UserPointerModelChange(user),
+		User:       UserModelChange(*user),
 	}
 }
 
@@ -60,7 +58,7 @@ func VideoModelChange(video *models.Video) Video {
 		CommentCount:  crud.GetVideoCommentsCountByID(sql.DB, video.ID),
 		IsFavorite:    true,
 		// 以下是测试数据
-		PlayUrl:  "",
-		CoverUrl: "",
+		PlayUrl:  "http://172.26.40.202:8080/static/" + video.Title,
+		CoverUrl: "https://cdn.pixabay.com/photo/2016/03/27/18/10/bear-1283347_1280.jpg",
 	}
 }
