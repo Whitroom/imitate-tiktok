@@ -10,12 +10,10 @@ import (
 )
 
 type FavoriteActionRequest struct {
-	// UserID     uint `form:"user_id" binding:"required"`
 	VideoID    uint `form:"video_id" binding:"required"`
 	ActionType uint `form:"action_type" binding:"required,min=1,max=2"`
 }
 
-// FavoriteAction no practical effect, just check if token is valid
 func FavoriteAction(ctx *gin.Context) {
 	var request FavoriteActionRequest
 	if err := ctx.ShouldBindQuery(&request); err != nil {
@@ -53,7 +51,6 @@ func FavoriteAction(ctx *gin.Context) {
 
 }
 
-// FavoriteList all users have same favorite video list
 func FavoriteList(ctx *gin.Context) {
 
 	user, _ := ctx.Get("User")

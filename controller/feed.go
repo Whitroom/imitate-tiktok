@@ -16,7 +16,6 @@ type FeedResponse struct {
 	NextTime  int64   `json:"next_time,omitempty"`
 }
 
-// Feed same demo video list for every request
 // 如果出现token 则不会出现自己的视频
 func Feed(ctx *gin.Context) {
 	var latestTime, nextTime int64

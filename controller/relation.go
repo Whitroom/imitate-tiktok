@@ -16,7 +16,6 @@ type UserListResponse struct {
 }
 
 type RelationActionRequest struct {
-	// UserID     uint `binding:"required" form:"user_id"`
 	ToUserID   uint `binding:"required" form:"to_user_id"`
 	ActionType uint `binding:"required,min=1,max=2" form:"action_type"`
 }

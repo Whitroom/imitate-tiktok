@@ -17,14 +17,12 @@ type CommentListResponse struct {
 }
 
 type CommentActionRequest struct {
-	// UserID      uint   `form:"user_id" binding:"required"`
 	VideoID     uint   `form:"video_id" binding:"required"`
 	ActionType  uint   `form:"action_type" binding:"required,min=1,max=2"`
 	CommentText string `form:"comment_text" binding:"omitempty"`
 	CommentID   uint   `form:"comment_id" binding:"omitempty"`
 }
 
-// CommentAction no practical effect, just check if token is valid
 func CommentAction(ctx *gin.Context) {
 	var request CommentActionRequest
 	var comment *models.Comment
@@ -50,7 +48,6 @@ func CommentAction(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, CommentModelChange(*comment))
 }
 
-// CommentList all videos have same demo comment list
 func CommentList(ctx *gin.Context) {
 	videoID, err := strconv.ParseUint(ctx.Query("video_id"), 10, 64)
 	if err != nil {

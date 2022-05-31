@@ -17,7 +17,6 @@ type VideoListResponse struct {
 	VideoList []Video `json:"video_list"`
 }
 
-// Publish check token then save upload file to public directory
 func Publish(ctx *gin.Context) {
 
 	token := ctx.PostForm("token")
@@ -75,7 +74,6 @@ func Publish(ctx *gin.Context) {
 	})
 }
 
-// PublishList all users have same publish video list
 func PublishList(ctx *gin.Context) {
 	user_, _ := ctx.Get("User")
 	user, _ := user_.(*models.User)
