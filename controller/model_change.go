@@ -58,7 +58,7 @@ func VideoModelChange(video *models.Video) Video {
 		CommentCount:  crud.GetVideoCommentsCountByID(sql.DB, video.ID),
 		IsFavorite:    true,
 		// 以下是测试数据
-		PlayUrl:  "http://172.26.40.202:8080/static/" + video.Title,
+		PlayUrl:  "http://your_machine_ip:8080/static/" + video.Title,
 		CoverUrl: "https://cdn.pixabay.com/photo/2016/03/27/18/10/bear-1283347_1280.jpg",
 	}
 }
