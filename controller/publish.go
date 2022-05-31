@@ -22,9 +22,9 @@ func Publish(ctx *gin.Context) {
 	token := ctx.PostForm("token")
 	userID, err := middlewares.Parse(token)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"code":    2,
-			"message": "token获取错误, 请重新登陆获取",
+		ctx.JSON(http.StatusUnauthorized, Response{
+			StatusCode: 1,
+			StatusMsg:  "token获取错误, 请重新登陆获取",
 		})
 		return
 	}
@@ -32,8 +32,8 @@ func Publish(ctx *gin.Context) {
 	data, err := ctx.FormFile("data")
 	if err != nil {
 		ctx.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
+			StatusCode: 2,
+			StatusMsg:  "文件获取错误: " + err.Error(),
 		})
 		return
 	}
@@ -49,28 +49,31 @@ func Publish(ctx *gin.Context) {
 	title := ctx.PostForm("title")
 	fmt.Println(title)
 	if title == "" {
-		ctx.JSON(http.StatusBadRequest, Response{StatusCode: 2, StatusMsg: "Title not Found"})
+		ctx.JSON(http.StatusBadRequest, Response{
+			StatusCode: 2,
+			StatusMsg:  "标题获取错误",
+		})
 	}
 	filename := filepath.Base(data.Filename)
 
-	finalName := fmt.Sprintf("%d_%s_%s", userID, title, filename)
+	video := crud.CreateVideo(sql.DB, &models.Video{
+		AuthorID: userID,
+		Title:    title,
+	})
+
+	finalName := fmt.Sprintf("%d_%s", video.ID, filename)
 	saveFile := filepath.Join("./public/", finalName)
 	if err := ctx.SaveUploadedFile(data, saveFile); err != nil {
 		ctx.JSON(http.StatusOK, Response{
-			StatusCode: 1,
+			StatusCode: 4,
 			StatusMsg:  err.Error(),
 		})
 		return
 	}
 
-	crud.CreateVideo(sql.DB, &models.Video{
-		AuthorID: userID,
-		Title:    finalName,
-	})
-
 	ctx.JSON(http.StatusOK, Response{
 		StatusCode: 0,
-		StatusMsg:  finalName + " uploaded successfully",
+		StatusMsg:  finalName + " 上传成功",
 	})
 }
 
