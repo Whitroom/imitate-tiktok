@@ -23,7 +23,7 @@ func GetUserByID(db *gorm.DB, userID uint) (*models.User, error) {
 
 func GetUserByName(db *gorm.DB, name string) *models.User {
 	var user *models.User
-	db.Where(&models.User{Name: name}).Find(&user)
+	db.Where(&models.User{Name: name}).First(&user)
 	return user
 }
 
@@ -37,7 +37,7 @@ func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.Use
 	if user == nil {
 		return nil, fmt.Errorf("未找到用户")
 	}
-	db.Model(&user).Association("Subscribers").Append(&subscriber)
+	db.Model(&user).Association("Subscribers").Append(subscriber)
 	return user, nil
 }
 
@@ -51,8 +51,7 @@ func CancelSubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*mode
 	if user == nil {
 		return nil, fmt.Errorf("未找到用户")
 	}
-	err := db.Model(&user).Association("Subscribers").Delete(&subscriber)
-	if err != nil {
+	if err := db.Model(&user).Association("Subscribers").Delete(subscriber); err != nil {
 		return nil, fmt.Errorf("关注不存在")
 	}
 	return user, nil
@@ -65,9 +64,9 @@ func GetUserSubscribersByID(db *gorm.DB, userID uint) []models.User {
 }
 
 func GetUserSubscribersCountByID(db *gorm.DB, userID uint) int64 {
-	var user *models.User
-	db.Preload("Subscribers").Find(&user, userID)
-	return int64(len(user.Subscribers))
+	var count int64
+	db.Raw("select count(subscriber_id) from subscribes where user_id = ?", &userID).Scan(&count)
+	return count
 }
 
 func GetUserFollowersByID(db *gorm.DB, userID uint) []models.User {
@@ -81,10 +80,7 @@ func GetUserFollowersByID(db *gorm.DB, userID uint) []models.User {
 
 func GetUserFollowersCountByID(db *gorm.DB, userID uint) int64 {
 	var count int64
-	db.Raw("select * from users where id in"+
-		"(select user_id from subscribes left join `users`"+
-		"on `users`.id = subscriber_id "+
-		"where subscriber_id = ?)", userID).Count(&count)
+	db.Raw("select count(user_id) from subscribes where subscriber_id = ?", &userID).Scan(&count)
 	return count
 }
 
@@ -93,7 +89,7 @@ func IsUserFollow(db *gorm.DB, userID, anotherUserID uint) bool {
 		return false
 	}
 	var user *models.User
-	db.Raw("select * from user where id in"+
+	db.Raw("select * from users where id in"+
 		" (select user_id from subscribes where user_id = ? and subscriber_id = ?)", userID, anotherUserID).Scan(&user)
 	return user != nil
 }

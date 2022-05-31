@@ -146,16 +146,10 @@ func Login(ctx *gin.Context) {
 }
 
 // 查询用户信息接口函数。
-// 如果token存在，则需要通过crud.IsUserFollow来确定是否关注。
 func UserInfo(ctx *gin.Context) {
 
-	token := ctx.Query("token")
-	var user *models.User
-	var userID uint
-	if token != "" {
-		userID, _ = middlewares.Parse(token)
-		user, _ = crud.GetUserByID(sql.DB, userID)
-	}
+	user_, _ := ctx.Get("User")
+	user, _ := user_.(*models.User)
 
 	toUserID_, err := strconv.ParseUint(ctx.Query("user_id"), 10, 64)
 	if err != nil {
@@ -179,7 +173,7 @@ func UserInfo(ctx *gin.Context) {
 
 	responseUser := UserPointerModelChange(toUser)
 	if user != nil {
-		responseUser.IsFollow = crud.IsUserFollow(sql.DB, user.ID, userID)
+		responseUser.IsFollow = crud.IsUserFollow(sql.DB, user.ID, toUserID)
 	} else {
 		responseUser.IsFollow = false
 	}
