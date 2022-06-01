@@ -3,7 +3,6 @@ package controller
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
 	"gitee.com/Whitroom/imitate-tiktok/sql"
@@ -43,16 +42,12 @@ type RegisterRequest struct {
 }
 
 func Register(ctx *gin.Context) {
-	var user RegisterRequest
-	if err := ctx.ShouldBindQuery(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "绑定失败",
-		})
+	var request RegisterRequest
+	if !BindAndValid(ctx, &request) {
 		return
 	}
 
-	if crud.GetUserByName(sql.DB, user.Username) == nil {
+	if crud.GetUserByName(sql.DB, request.Username) == nil {
 		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 2,
 			StatusMsg:  "存在用户姓名",
@@ -61,8 +56,8 @@ func Register(ctx *gin.Context) {
 	}
 
 	newUser := &models.User{
-		Name:     user.Username,
-		Password: hashEncode(user.Password),
+		Name:     request.Username,
+		Password: hashEncode(request.Password),
 		Content:  "",
 	}
 
@@ -88,31 +83,25 @@ func Register(ctx *gin.Context) {
 }
 
 func Login(ctx *gin.Context) {
-	var user RegisterRequest
-	if err := ctx.ShouldBindQuery(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, UserLoginResponse{
-			Response: Response{
-				StatusCode: 1,
-				StatusMsg:  "绑定失败",
-			},
-		})
+	var request RegisterRequest
+	if !BindAndValid(ctx, &request) {
 		return
 	}
-	existedUser := crud.GetUserByName(sql.DB, user.Username)
+	existedUser := crud.GetUserByName(sql.DB, request.Username)
 
 	if existedUser == nil {
 		ctx.JSON(http.StatusNotFound, Response{
-			StatusCode: 1,
+			StatusCode: 2,
 			StatusMsg:  "找不到用户",
 		})
 		return
 	}
 
-	pwdMatch := comparePasswords(user.Password, existedUser.Password)
+	pwdMatch := comparePasswords(request.Password, existedUser.Password)
 	if !pwdMatch {
 		ctx.JSON(http.StatusUnauthorized, UserLoginResponse{
 			Response: Response{
-				StatusCode: 2,
+				StatusCode: 3,
 				StatusMsg:  "用户名或密码错误",
 			},
 		})
@@ -122,7 +111,7 @@ func Login(ctx *gin.Context) {
 	token, err := middlewares.Sign(existedUser.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, Response{
-			StatusCode: 3,
+			StatusCode: 4,
 			StatusMsg:  "token创建失败",
 		})
 		return
@@ -141,16 +130,10 @@ func UserInfo(ctx *gin.Context) {
 	user_, _ := ctx.Get("User")
 	user, _ := user_.(*models.User)
 
-	toUserID_, err := strconv.ParseUint(ctx.Query("user_id"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 2,
-			StatusMsg:  "user_id错误" + err.Error(),
-		})
+	toUserID := QueryIDAndValid(ctx, "user_id")
+	if toUserID == 0 {
 		return
 	}
-
-	toUserID := uint(toUserID_)
 
 	toUser, err := crud.GetUserByID(sql.DB, toUserID)
 	if err != nil {

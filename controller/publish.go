@@ -20,12 +20,8 @@ type VideoListResponse struct {
 func Publish(ctx *gin.Context) {
 
 	token := ctx.PostForm("token")
-	userID, err := middlewares.Parse(token)
+	userID, err := middlewares.Parse(ctx, token)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, Response{
-			StatusCode: 1,
-			StatusMsg:  "token获取错误, 请重新登陆获取",
-		})
 		return
 	}
 

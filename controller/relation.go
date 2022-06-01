@@ -23,15 +23,9 @@ type RelationActionRequest struct {
 // RelationAction no practical effect, just check if token is valid
 func RelationAction(ctx *gin.Context) {
 	var request RelationActionRequest
-	err := ctx.ShouldBindQuery(&request)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "绑定失败",
-		})
+	if !BindAndValid(ctx, &request) {
 		return
 	}
-
 	user_, _ := ctx.Get("User")
 	user, _ := user_.(*models.User)
 	if request.ToUserID == user.ID {
@@ -66,7 +60,6 @@ func RelationAction(ctx *gin.Context) {
 	})
 }
 
-// FollowList all users have same follow list
 func FollowList(ctx *gin.Context) {
 	userID, err := strconv.ParseUint(ctx.Query("user_id"), 10, 64)
 	if err != nil {

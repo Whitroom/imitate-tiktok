@@ -26,26 +26,22 @@ func AuthUser() gin.HandlerFunc {
 		token := ctx.Query("token")
 		if token == "" {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"code":    1,
-				"message": "没有相应的token, 请重新登陆获取",
+				"StatusCode": 1,
+				"StatusMsg":  "没有相应的token, 请重新登陆获取",
 			})
 			ctx.Abort()
 			return
 		}
-		UserID, err := Parse(token)
+		UserID, err := Parse(ctx, token)
 		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"code":    2,
-				"message": "token获取错误, 请重新登陆获取",
-			})
 			ctx.Abort()
 			return
 		}
 		User, err := crud.GetUserByID(sql.DB, UserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, gin.H{
-				"code":    3,
-				"message": "token解析错误, 请重新登陆获取",
+				"StatusCode": 3,
+				"StatusMsg":  "token解析错误, 请重新登陆获取",
 			})
 			ctx.Abort()
 			return

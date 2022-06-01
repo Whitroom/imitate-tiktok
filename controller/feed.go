@@ -29,12 +29,8 @@ func Feed(ctx *gin.Context) {
 	var userID uint
 	if token != "" {
 		var err error
-		userID, err = middlewares.Parse(token)
+		userID, err = middlewares.Parse(ctx, token)
 		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, Response{
-				StatusCode: 1,
-				StatusMsg:  "token校验失败",
-			})
 			return
 		}
 

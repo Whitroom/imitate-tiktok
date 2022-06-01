@@ -2,8 +2,10 @@ package middlewares
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -19,7 +21,7 @@ func Sign(userID uint) (string, error) {
 }
 
 // 解析token, 仅传入token字符串, 仅判断是否转换成功与令牌是否超时
-func Parse(tokenString string) (uint, error) {
+func Parse(ctx *gin.Context, tokenString string) (uint, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("加密方式错误: %v", t.Header["alg"])
@@ -27,6 +29,10 @@ func Parse(tokenString string) (uint, error) {
 		return []byte(Secret), nil
 	})
 	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"code":    2,
+			"message": "token获取错误, 请重新登陆获取",
+		})
 		return 0, err
 	}
 

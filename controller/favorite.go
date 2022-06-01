@@ -16,13 +16,10 @@ type FavoriteActionRequest struct {
 
 func FavoriteAction(ctx *gin.Context) {
 	var request FavoriteActionRequest
-	if err := ctx.ShouldBindQuery(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "数据绑定失败",
-		})
+	if !BindAndValid(ctx, &request) {
 		return
 	}
+
 	user_, _ := ctx.Get("User")
 	user, _ := user_.(*models.User)
 

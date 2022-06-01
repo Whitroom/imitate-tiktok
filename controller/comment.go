@@ -1,9 +1,7 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
 
 	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
@@ -26,14 +24,10 @@ type CommentActionRequest struct {
 func CommentAction(ctx *gin.Context) {
 	var request CommentActionRequest
 	var comment *models.Comment
-	err := ctx.ShouldBindQuery(&request)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "参数绑定错误: " + err.Error(),
-		})
+	if BindAndValid(ctx, &request) {
 		return
 	}
+
 	user_, _ := ctx.Get("User")
 	user, _ := user_.(*models.User)
 	if request.ActionType == 1 {
@@ -49,15 +43,13 @@ func CommentAction(ctx *gin.Context) {
 }
 
 func CommentList(ctx *gin.Context) {
-	videoID, err := strconv.ParseUint(ctx.Query("video_id"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "参数绑定错误",
-		})
+	videoID := QueryIDAndValid(ctx, "video_id")
+	if videoID == 0 {
+		return
 	}
-	comments := crud.GetComments(sql.DB, uint(videoID))
-	fmt.Println(comments)
+
+	comments := crud.GetComments(sql.DB, videoID)
+
 	ctx.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},
 		CommentList: CommentsModelChange(comments),
