@@ -20,8 +20,7 @@ func hashEncode(str string) string {
 }
 
 func comparePasswords(sourcePwd, hashPwd string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashPwd), []byte(sourcePwd))
-	return err == nil
+	return bcrypt.CompareHashAndPassword([]byte(hashPwd), []byte(sourcePwd)) == nil
 }
 
 type UserLoginResponse struct {
@@ -96,8 +95,7 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	pwdMatch := comparePasswords(request.Password, existedUser.Password)
-	if !pwdMatch {
+	if !comparePasswords(request.Password, existedUser.Password) {
 		ctx.JSON(http.StatusUnauthorized, UserLoginResponse{
 			Response: Response{
 				StatusCode: 3,
