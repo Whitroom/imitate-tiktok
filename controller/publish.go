@@ -2,8 +2,10 @@ package controller
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
@@ -51,12 +53,14 @@ func Publish(ctx *gin.Context) {
 	}
 	filename := filepath.Base(data.Filename)
 
-	video := crud.CreateVideo(&models.Video{
+	rand.Seed(time.Now().Unix())
+	finalName := fmt.Sprintf("%d_%s", rand.Int(), filename)
+
+	crud.CreateVideo(&models.Video{
 		AuthorID: userID,
 		Title:    title,
 	})
 
-	finalName := fmt.Sprintf("%d_%s", video.ID, filename)
 	saveFile := filepath.Join("./public/", finalName)
 	if err := ctx.SaveUploadedFile(data, saveFile); err != nil {
 		ctx.JSON(http.StatusOK, Response{
