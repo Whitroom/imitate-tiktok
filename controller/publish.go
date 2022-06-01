@@ -58,7 +58,7 @@ func Publish(ctx *gin.Context) {
 
 	crud.CreateVideo(&models.Video{
 		AuthorID: userID,
-		Title:    title,
+		Title:    finalName,
 	})
 
 	saveFile := filepath.Join("./public/", finalName)
