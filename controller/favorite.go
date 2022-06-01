@@ -3,7 +3,6 @@ package controller
 import (
 	"net/http"
 
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
@@ -24,7 +23,7 @@ func FavoriteAction(ctx *gin.Context) {
 	user, _ := user_.(*models.User)
 
 	if request.ActionType == 1 {
-		if err := crud.UserLikeVideo(sql.DB, user.ID, request.VideoID); err != nil {
+		if err := crud.UserLikeVideo(user.ID, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 2,
 				StatusMsg:  err.Error(),
@@ -32,7 +31,7 @@ func FavoriteAction(ctx *gin.Context) {
 			return
 		}
 	} else {
-		if err := crud.UserDislikeVideo(sql.DB, user.ID, request.VideoID); err != nil {
+		if err := crud.UserDislikeVideo(user.ID, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 3,
 				StatusMsg:  err.Error(),
@@ -50,10 +49,10 @@ func FavoriteAction(ctx *gin.Context) {
 
 func FavoriteList(ctx *gin.Context) {
 
-	user, _ := ctx.Get("User")
-	user_, _ := user.(*models.User)
+	user_, _ := ctx.Get("User")
+	user, _ := user_.(*models.User)
 
-	videos := crud.GetUserLikeVideosByUserID(sql.DB, user_.ID)
+	videos := crud.GetUserLikeVideosByUserID(user.ID)
 
 	ctx.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{

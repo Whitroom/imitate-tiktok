@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"github.com/gin-gonic/gin"
 )
@@ -37,7 +36,7 @@ func AuthUser() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		User, err := crud.GetUserByID(sql.DB, UserID)
+		User, err := crud.GetUserByID(UserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, gin.H{
 				"StatusCode": 3,

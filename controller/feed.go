@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"github.com/gin-gonic/gin"
 )
@@ -37,10 +36,10 @@ func Feed(ctx *gin.Context) {
 	} else {
 		userID = 0
 	}
-	videos := crud.GetVideos(sql.DB, latestTime, uint(userID))
+	videos := crud.GetVideos(latestTime, userID)
 	modelVideos := VideosModelChange(videos)
 	for i := 0; i < len(modelVideos); i++ {
-		modelVideos[i].IsFavorite = crud.IsUserFavoriteVideo(sql.DB, uint(userID), uint(modelVideos[i].Id))
+		modelVideos[i].IsFavorite = crud.IsUserFavoriteVideo(userID, uint(modelVideos[i].Id))
 	}
 	if len(videos)-1 < 0 {
 		nextTime = 0

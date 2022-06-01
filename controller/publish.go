@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
@@ -52,7 +51,7 @@ func Publish(ctx *gin.Context) {
 	}
 	filename := filepath.Base(data.Filename)
 
-	video := crud.CreateVideo(sql.DB, &models.Video{
+	video := crud.CreateVideo(&models.Video{
 		AuthorID: userID,
 		Title:    title,
 	})
@@ -76,10 +75,10 @@ func Publish(ctx *gin.Context) {
 func PublishList(ctx *gin.Context) {
 	user_, _ := ctx.Get("User")
 	user, _ := user_.(*models.User)
-	videos := crud.GetUserPublishVideosByID(sql.DB, user.ID)
+	videos := crud.GetUserPublishVideosByID(user.ID)
 	modelVideos := VideosModelChange(videos)
 	for i := 0; i < len(modelVideos); i++ {
-		modelVideos[i].IsFavorite = crud.IsUserFavoriteVideo(sql.DB, user.ID, uint(modelVideos[i].Id))
+		modelVideos[i].IsFavorite = crud.IsUserFavoriteVideo(user.ID, uint(modelVideos[i].Id))
 	}
 	ctx.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{

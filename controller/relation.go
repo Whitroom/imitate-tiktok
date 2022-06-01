@@ -2,9 +2,7 @@ package controller
 
 import (
 	"net/http"
-	"strconv"
 
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
@@ -36,7 +34,7 @@ func RelationAction(ctx *gin.Context) {
 		return
 	}
 	if request.ActionType == 1 {
-		_, err := crud.SubscribeUser(sql.DB, user.ID, request.ToUserID)
+		_, err := crud.SubscribeUser(user.ID, request.ToUserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 3,
@@ -45,7 +43,7 @@ func RelationAction(ctx *gin.Context) {
 			return
 		}
 	} else {
-		_, err := crud.CancelSubscribeUser(sql.DB, user.ID, request.ToUserID)
+		_, err := crud.CancelSubscribeUser(user.ID, request.ToUserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 4,
@@ -61,15 +59,11 @@ func RelationAction(ctx *gin.Context) {
 }
 
 func FollowList(ctx *gin.Context) {
-	userID, err := strconv.ParseUint(ctx.Query("user_id"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "user_id不是数字",
-		})
+	userID := QueryIDAndValid(ctx, "user_id")
+	if userID == 0 {
 		return
 	}
-	users := crud.GetUserSubscribersByID(sql.DB, uint(userID))
+	users := crud.GetUserSubscribersByID(userID)
 	modelUsers := UsersModelChange(users)
 	ctx.JSON(http.StatusOK, UserListResponse{
 		Response: Response{
@@ -81,19 +75,15 @@ func FollowList(ctx *gin.Context) {
 
 // FollowerList all users have same follower list
 func FollowerList(ctx *gin.Context) {
-	userID, err := strconv.ParseUint(ctx.Query("user_id"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "user_id不是数字",
-		})
+	userID := QueryIDAndValid(ctx, "user_id")
+	if userID == 0 {
 		return
 	}
-	users := crud.GetUserFollowersByID(sql.DB, uint(userID))
+	users := crud.GetUserFollowersByID(uint(userID))
 	modelUsers := UsersModelChange(users)
 	for i := 0; i < len(modelUsers); i++ {
 		modelUsers[i].IsFollow = crud.IsUserFollow(
-			sql.DB, uint(modelUsers[i].Id), uint(userID),
+			uint(modelUsers[i].Id), uint(userID),
 		)
 	}
 	ctx.JSON(http.StatusOK, UserListResponse{

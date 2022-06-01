@@ -3,7 +3,6 @@ package controller
 import (
 	"net/http"
 
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
@@ -31,13 +30,13 @@ func CommentAction(ctx *gin.Context) {
 	user_, _ := ctx.Get("User")
 	user, _ := user_.(*models.User)
 	if request.ActionType == 1 {
-		comment = crud.CreateComment(sql.DB, &models.Comment{
+		comment = crud.CreateComment(&models.Comment{
 			UserID:  user.ID,
 			VideoID: request.VideoID,
 			Content: request.CommentText,
 		})
 	} else {
-		crud.DeleteComment(sql.DB, request.CommentID)
+		crud.DeleteComment(request.CommentID)
 	}
 	ctx.JSON(http.StatusOK, CommentModelChange(*comment))
 }
@@ -48,7 +47,7 @@ func CommentList(ctx *gin.Context) {
 		return
 	}
 
-	comments := crud.GetComments(sql.DB, videoID)
+	comments := crud.GetComments(videoID)
 
 	ctx.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},

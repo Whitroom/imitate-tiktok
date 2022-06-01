@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
@@ -47,7 +46,7 @@ func Register(ctx *gin.Context) {
 		return
 	}
 
-	if crud.GetUserByName(sql.DB, request.Username) == nil {
+	if crud.GetUserByName(request.Username) == nil {
 		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 2,
 			StatusMsg:  "存在用户姓名",
@@ -61,7 +60,7 @@ func Register(ctx *gin.Context) {
 		Content:  "",
 	}
 
-	newUser = crud.CreateUser(sql.DB, newUser)
+	newUser = crud.CreateUser(newUser)
 
 	token, err := middlewares.Sign(newUser.ID)
 	if err != nil {
@@ -87,7 +86,7 @@ func Login(ctx *gin.Context) {
 	if !BindAndValid(ctx, &request) {
 		return
 	}
-	existedUser := crud.GetUserByName(sql.DB, request.Username)
+	existedUser := crud.GetUserByName(request.Username)
 
 	if existedUser == nil {
 		ctx.JSON(http.StatusNotFound, Response{
@@ -135,7 +134,7 @@ func UserInfo(ctx *gin.Context) {
 		return
 	}
 
-	toUser, err := crud.GetUserByID(sql.DB, toUserID)
+	toUser, err := crud.GetUserByID(toUserID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, Response{
 			StatusCode: 3,
@@ -146,7 +145,7 @@ func UserInfo(ctx *gin.Context) {
 
 	responseUser := UserModelChange(*toUser)
 	if user != nil {
-		responseUser.IsFollow = crud.IsUserFollow(sql.DB, user.ID, toUserID)
+		responseUser.IsFollow = crud.IsUserFollow(user.ID, toUserID)
 	} else {
 		responseUser.IsFollow = false
 	}
