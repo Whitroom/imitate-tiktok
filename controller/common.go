@@ -15,7 +15,7 @@ type Response struct {
 }
 
 type Video struct {
-	Id            int64  `json:"id,omitempty"`
+	ID            int64  `json:"id,omitempty"`
 	Author        User   `json:"author"`
 	PlayUrl       string `json:"play_url,omitempty"`
 	CoverUrl      string `json:"cover_url,omitempty"`
@@ -25,14 +25,14 @@ type Video struct {
 }
 
 type Comment struct {
-	Id         int64  `json:"id,omitempty"`
+	ID         int64  `json:"id,omitempty"`
 	User       User   `json:"user"`
 	Content    string `json:"content,omitempty"`
 	CreateDate string `json:"create_date,omitempty"`
 }
 
 type User struct {
-	Id            int64  `json:"id,omitempty"`
+	ID            int64  `json:"id,omitempty"`
 	Name          string `json:"name,omitempty"`
 	FollowCount   int64  `json:"follow_count,omitempty"`
 	FollowerCount int64  `json:"follower_count,omitempty"`
@@ -62,9 +62,15 @@ func QueryIDAndValid(ctx *gin.Context, queryName string) uint {
 	return uint(id)
 }
 
-func UsersModelChange(Users []models.User) []User {
+func GetUserFromCtx(ctx *gin.Context) *models.User {
+	user_, _ := ctx.Get("User")
+	user, _ := user_.(*models.User)
+	return user
+}
+
+func UsersModelChange(userList []models.User) []User {
 	var users []User
-	for _, user := range Users {
+	for _, user := range userList {
 		users = append(users, UserModelChange(user))
 	}
 	return users
@@ -72,7 +78,7 @@ func UsersModelChange(Users []models.User) []User {
 
 func UserModelChange(user models.User) User {
 	return User{
-		Id:            int64(user.ID),
+		ID:            int64(user.ID),
 		Name:          user.Name,
 		FollowCount:   crud.GetUserSubscribersCountByID(user.ID),
 		FollowerCount: crud.GetUserFollowersCountByID(user.ID),
@@ -80,9 +86,9 @@ func UserModelChange(user models.User) User {
 	}
 }
 
-func CommentsModelChange(Comments []models.Comment) []Comment {
+func CommentsModelChange(commentList []models.Comment) []Comment {
 	var comments []Comment
-	for _, comment := range Comments {
+	for _, comment := range commentList {
 		comments = append(comments, CommentModelChange(comment))
 	}
 	return comments
@@ -91,16 +97,16 @@ func CommentsModelChange(Comments []models.Comment) []Comment {
 func CommentModelChange(comment models.Comment) Comment {
 	user, _ := crud.GetUserByID(comment.UserID)
 	return Comment{
-		Id:         int64(comment.ID),
+		ID:         int64(comment.ID),
 		Content:    comment.Content,
 		CreateDate: comment.CreatedAt.Format("2006-01-02 15:04:05"),
 		User:       UserModelChange(*user),
 	}
 }
 
-func VideosModelChange(Videos []models.Video) []Video {
+func VideosModelChange(videoList []models.Video) []Video {
 	var videos []Video
-	for _, video := range Videos {
+	for _, video := range videoList {
 		videos = append(videos, VideoModelChange(&video))
 	}
 	return videos
@@ -108,7 +114,7 @@ func VideosModelChange(Videos []models.Video) []Video {
 
 func VideoModelChange(video *models.Video) Video {
 	return Video{
-		Id:            int64(video.ID),
+		ID:            int64(video.ID),
 		FavoriteCount: crud.GetVideoLikesCount(video.ID),
 		Author:        UserModelChange(video.Author),
 		CommentCount:  crud.GetVideoCommentsCountByID(video.ID),

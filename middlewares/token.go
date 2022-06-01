@@ -30,21 +30,29 @@ func Parse(ctx *gin.Context, tokenString string) (uint, error) {
 	})
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"code":    2,
-			"message": "token获取错误, 请重新登陆获取",
+			"StatusCode": 2,
+			"StatusMsg":  "token获取错误, 请重新登陆获取",
 		})
 		return 0, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !(ok && token.Valid) {
-		return 0, fmt.Errorf("转换失败")
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"StatusCode": 2,
+			"StatusMsg":  "token解析错误, 请重新登陆获取",
+		})
+		return 0, err
 	}
 	userID := uint(claims["id"].(float64))
 	createTime, _ := claims["nbf"].(int64)
 
 	if time.Now().Unix()-createTime > 2*int64(time.Hour) {
-		return 0, fmt.Errorf("token令牌超时")
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"StatusCode": 2,
+			"StatusMsg":  "token超时, 请重新登陆获取",
+		})
+		return 0, err
 	}
 
 	return userID, nil

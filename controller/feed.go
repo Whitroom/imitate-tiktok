@@ -37,9 +37,9 @@ func Feed(ctx *gin.Context) {
 		userID = 0
 	}
 	videos := crud.GetVideos(latestTime, userID)
-	modelVideos := VideosModelChange(videos)
-	for i := 0; i < len(modelVideos); i++ {
-		modelVideos[i].IsFavorite = crud.IsUserFavoriteVideo(userID, uint(modelVideos[i].Id))
+	responseVideos := VideosModelChange(videos)
+	for i := 0; i < len(responseVideos); i++ {
+		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(userID, uint(responseVideos[i].ID))
 	}
 	if len(videos)-1 < 0 {
 		nextTime = 0
@@ -48,7 +48,7 @@ func Feed(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, FeedResponse{
 		Response:  Response{StatusCode: 0},
-		VideoList: modelVideos,
+		VideoList: responseVideos,
 		NextTime:  nextTime,
 	})
 }

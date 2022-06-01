@@ -7,12 +7,12 @@ import (
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 )
 
-func UserLikeVideo(UserID uint, VideoID uint) error {
+func UserLikeVideo(userID uint, videoID uint) error {
 	var user *models.User
 	var video *models.Video
 
-	sql.DB.First(&user, UserID)
-	sql.DB.First(&video, VideoID)
+	sql.DB.First(&user, userID)
+	sql.DB.First(&video, videoID)
 
 	if user == nil || video == nil {
 		return fmt.Errorf("找不到用户或视频")
@@ -24,19 +24,18 @@ func UserLikeVideo(UserID uint, VideoID uint) error {
 	return nil
 }
 
-func UserDislikeVideo(UserID uint, VideoID uint) error {
+func UserDislikeVideo(userID uint, videoID uint) error {
 	var user *models.User
 	var video *models.Video
 
-	sql.DB.First(&user, UserID)
-	sql.DB.First(&video, VideoID)
+	sql.DB.First(&user, userID)
+	sql.DB.First(&video, videoID)
 
 	if user == nil || video == nil {
 		return fmt.Errorf("找不到用户或视频")
 	}
 
-	err := sql.DB.Model(&user).Association("FavoriteVideos").Delete(video)
-	if err != nil {
+	if sql.DB.Model(&user).Association("FavoriteVideos").Delete(video) != nil {
 		return fmt.Errorf("找不到点赞的视频")
 	}
 	sql.DB.Commit()
@@ -44,15 +43,15 @@ func UserDislikeVideo(UserID uint, VideoID uint) error {
 	return nil
 }
 
-func GetUserLikeVideosByUserID(UserID uint) []models.Video {
+func GetUserLikeVideosByUserID(userID uint) []models.Video {
 	var user *models.User
-	sql.DB.Preload("FavoriteVideos").Find(&user, UserID)
+	sql.DB.Preload("FavoriteVideos").Find(&user, userID)
 	return user.FavoriteVideos
 }
 
-func GetVideoLikesCount(VideoID uint) int64 {
+func GetVideoLikesCount(videoID uint) int64 {
 	var count int64
-	sql.DB.Raw("select count(user_id) from user_favorite_videos where video_id = ?", VideoID).Scan(&count)
+	sql.DB.Raw("select count(user_id) from user_favorite_videos where video_id = ?", videoID).Scan(&count)
 	return count
 }
 

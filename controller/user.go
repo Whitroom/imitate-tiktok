@@ -25,7 +25,7 @@ func comparePasswords(sourcePwd, hashPwd string) bool {
 
 type UserLoginResponse struct {
 	Response
-	UserId int64  `json:"user_id,omitempty"`
+	UserID int64  `json:"user_id,omitempty"`
 	Token  string `json:"token"`
 }
 
@@ -53,13 +53,11 @@ func Register(ctx *gin.Context) {
 		return
 	}
 
-	newUser := &models.User{
+	newUser := crud.CreateUser(&models.User{
 		Name:     request.Username,
 		Password: hashEncode(request.Password),
 		Content:  "",
-	}
-
-	newUser = crud.CreateUser(newUser)
+	})
 
 	token, err := middlewares.Sign(newUser.ID)
 	if err != nil {
@@ -75,7 +73,7 @@ func Register(ctx *gin.Context) {
 			StatusCode: 0,
 			StatusMsg:  "用户创建成功",
 		},
-		UserId: int64(newUser.ID),
+		UserID: int64(newUser.ID),
 		Token:  token,
 	})
 }
@@ -96,11 +94,9 @@ func Login(ctx *gin.Context) {
 	}
 
 	if !comparePasswords(request.Password, existedUser.Password) {
-		ctx.JSON(http.StatusUnauthorized, UserLoginResponse{
-			Response: Response{
-				StatusCode: 3,
-				StatusMsg:  "用户名或密码错误",
-			},
+		ctx.JSON(http.StatusUnauthorized, Response{
+			StatusCode: 3,
+			StatusMsg:  "用户名或密码错误",
 		})
 		return
 	}
@@ -116,7 +112,7 @@ func Login(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, UserLoginResponse{
 		Response: Response{StatusCode: 0},
-		UserId:   int64(existedUser.ID),
+		UserID:   int64(existedUser.ID),
 		Token:    token,
 	})
 }
@@ -124,8 +120,7 @@ func Login(ctx *gin.Context) {
 // 查询用户信息接口函数。
 func UserInfo(ctx *gin.Context) {
 
-	user_, _ := ctx.Get("User")
-	user, _ := user_.(*models.User)
+	user := GetUserFromCtx(ctx)
 
 	toUserID := QueryIDAndValid(ctx, "user_id")
 	if toUserID == 0 {

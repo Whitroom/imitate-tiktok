@@ -47,10 +47,8 @@ func CommentList(ctx *gin.Context) {
 		return
 	}
 
-	comments := crud.GetComments(videoID)
-
 	ctx.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},
-		CommentList: CommentsModelChange(comments),
+		CommentList: CommentsModelChange(crud.GetComments(videoID)),
 	})
 }

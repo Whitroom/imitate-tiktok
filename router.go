@@ -8,7 +8,6 @@ import (
 )
 
 func initRouter(r *gin.Engine) {
-	// public directory is used to serve static resources
 	r.Static("/static", "./public")
 
 	apiRouter := r.Group("/douyin")
@@ -25,6 +24,7 @@ func initRouter(r *gin.Engine) {
 	// 需要token校验的接口
 	// basic apis
 	apiRouter.POST("/publish/action/", controller.Publish)
+
 	auth := apiRouter.Group("/", middlewares.AuthUser())
 	auth.GET("/publish/list/", controller.PublishList)
 	auth.GET("/user/", controller.UserInfo)

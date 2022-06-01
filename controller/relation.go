@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
-	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,8 +23,7 @@ func RelationAction(ctx *gin.Context) {
 	if !BindAndValid(ctx, &request) {
 		return
 	}
-	user_, _ := ctx.Get("User")
-	user, _ := user_.(*models.User)
+	user := GetUserFromCtx(ctx)
 	if request.ToUserID == user.ID {
 		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 2,
@@ -64,12 +62,12 @@ func FollowList(ctx *gin.Context) {
 		return
 	}
 	users := crud.GetUserSubscribersByID(userID)
-	modelUsers := UsersModelChange(users)
+	responseUsers := UsersModelChange(users)
 	ctx.JSON(http.StatusOK, UserListResponse{
 		Response: Response{
 			StatusCode: 0,
 		},
-		UserList: modelUsers,
+		UserList: responseUsers,
 	})
 }
 
@@ -80,16 +78,16 @@ func FollowerList(ctx *gin.Context) {
 		return
 	}
 	users := crud.GetUserFollowersByID(uint(userID))
-	modelUsers := UsersModelChange(users)
-	for i := 0; i < len(modelUsers); i++ {
-		modelUsers[i].IsFollow = crud.IsUserFollow(
-			uint(modelUsers[i].Id), uint(userID),
+	responseUsers := UsersModelChange(users)
+	for i := 0; i < len(responseUsers); i++ {
+		responseUsers[i].IsFollow = crud.IsUserFollow(
+			uint(responseUsers[i].ID), uint(userID),
 		)
 	}
 	ctx.JSON(http.StatusOK, UserListResponse{
 		Response: Response{
 			StatusCode: 0,
 		},
-		UserList: modelUsers,
+		UserList: responseUsers,
 	})
 }
