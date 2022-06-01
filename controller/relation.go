@@ -12,14 +12,11 @@ type UserListResponse struct {
 	UserList []User `json:"user_list"`
 }
 
-type RelationActionRequest struct {
-	ToUserID   uint `binding:"required" form:"to_user_id"`
-	ActionType uint `binding:"required,min=1,max=2" form:"action_type"`
-}
-
-// RelationAction no practical effect, just check if token is valid
 func RelationAction(ctx *gin.Context) {
-	var request RelationActionRequest
+	var request struct {
+		ToUserID   uint `binding:"required" form:"to_user_id"`
+		ActionType uint `binding:"required,min=1,max=2" form:"action_type"`
+	}
 	if !BindAndValid(ctx, &request) {
 		return
 	}
@@ -71,7 +68,6 @@ func FollowList(ctx *gin.Context) {
 	})
 }
 
-// FollowerList all users have same follower list
 func FollowerList(ctx *gin.Context) {
 	userID := QueryIDAndValid(ctx, "user_id")
 	if userID == 0 {

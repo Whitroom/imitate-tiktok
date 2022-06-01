@@ -49,17 +49,3 @@ func GetVideoUserFavoritesByID(videoID uint) []models.User {
 		"videos where author_id= ?)", videoID).Scan(&UserFavorites)
 	return UserFavorites
 }
-
-func GetVideoCommentsByID(videoID uint) []models.Comment {
-	var Comments []models.Comment
-	sql.DB.Raw("select * from comments"+
-		" where video_id = ?", videoID).Scan(&Comments)
-	return Comments
-}
-
-func GetVideoCommentsCountByID(videoID uint) int64 {
-	var count int64
-	sql.DB.Raw("select count(*) from comments"+
-		" where video_id = ?", videoID).Scan(&count)
-	return count
-}

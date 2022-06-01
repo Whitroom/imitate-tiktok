@@ -19,24 +19,24 @@ type Video struct {
 	Author        User   `json:"author"`
 	PlayUrl       string `json:"play_url,omitempty"`
 	CoverUrl      string `json:"cover_url,omitempty"`
-	FavoriteCount int64  `json:"favorite_count,omitempty"`
-	CommentCount  int64  `json:"comment_count,omitempty"`
-	IsFavorite    bool   `json:"is_favorite,omitempty"`
+	FavoriteCount int64  `json:"favorite_count,"`
+	CommentCount  int64  `json:"comment_count,"`
+	IsFavorite    bool   `json:"is_favorite"`
 }
 
 type Comment struct {
 	ID         int64  `json:"id,omitempty"`
 	User       User   `json:"user"`
 	Content    string `json:"content,omitempty"`
-	CreateDate string `json:"create_date,omitempty"`
+	CreateDate string `json:"create_dat,"`
 }
 
 type User struct {
 	ID            int64  `json:"id,omitempty"`
 	Name          string `json:"name,omitempty"`
-	FollowCount   int64  `json:"follow_count,omitempty"`
-	FollowerCount int64  `json:"follower_count,omitempty"`
-	IsFollow      bool   `json:"is_follow,omitempty"`
+	FollowCount   int64  `json:"follow_count"`
+	FollowerCount int64  `json:"follower_count"`
+	IsFollow      bool   `json:"is_follow"`
 }
 
 func BindAndValid(ctx *gin.Context, target interface{}) bool {
@@ -99,7 +99,7 @@ func CommentModelChange(comment models.Comment) Comment {
 	return Comment{
 		ID:         int64(comment.ID),
 		Content:    comment.Content,
-		CreateDate: comment.CreatedAt.Format("2006-01-02 15:04:05"),
+		CreateDate: comment.CreatedAt.Format("01-02"),
 		User:       UserModelChange(*user),
 	}
 }
@@ -120,7 +120,7 @@ func VideoModelChange(video *models.Video) Video {
 		CommentCount:  crud.GetVideoCommentsCountByID(video.ID),
 		IsFavorite:    true,
 		// 以下是测试数据
-		PlayUrl:  "http://your_machine_ip:8080/static/" + video.Title,
+		PlayUrl:  "http://172.26.44.238:8080/static/" + video.Title,
 		CoverUrl: "https://cdn.pixabay.com/photo/2016/03/27/18/10/bear-1283347_1280.jpg",
 	}
 }

@@ -7,13 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type FavoriteActionRequest struct {
-	VideoID    uint `form:"video_id" binding:"required"`
-	ActionType uint `form:"action_type" binding:"required,min=1,max=2"`
-}
-
 func FavoriteAction(ctx *gin.Context) {
-	var request FavoriteActionRequest
+	var request struct {
+		VideoID    uint `form:"video_id" binding:"required"`
+		ActionType uint `form:"action_type" binding:"required,min=1,max=2"`
+	}
+
 	if !BindAndValid(ctx, &request) {
 		return
 	}
