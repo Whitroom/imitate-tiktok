@@ -3,31 +3,24 @@ package controller
 import (
 	"net/http"
 
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
-	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
 )
 
-type FavoriteActionRequest struct {
-	VideoID    uint `form:"video_id" binding:"required"`
-	ActionType uint `form:"action_type" binding:"required,min=1,max=2"`
-}
-
 func FavoriteAction(ctx *gin.Context) {
-	var request FavoriteActionRequest
-	if err := ctx.ShouldBindQuery(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "数据绑定失败",
-		})
+	var request struct {
+		VideoID    uint `form:"video_id" binding:"required"`
+		ActionType uint `form:"action_type" binding:"required,min=1,max=2"`
+	}
+
+	if !BindAndValid(ctx, &request) {
 		return
 	}
-	user_, _ := ctx.Get("User")
-	user, _ := user_.(*models.User)
+
+	user := GetUserFromCtx(ctx)
 
 	if request.ActionType == 1 {
-		if err := crud.UserLikeVideo(sql.DB, user.ID, request.VideoID); err != nil {
+		if err := crud.UserLikeVideo(user.ID, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 2,
 				StatusMsg:  err.Error(),
@@ -35,7 +28,7 @@ func FavoriteAction(ctx *gin.Context) {
 			return
 		}
 	} else {
-		if err := crud.UserDislikeVideo(sql.DB, user.ID, request.VideoID); err != nil {
+		if err := crud.UserDislikeVideo(user.ID, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 3,
 				StatusMsg:  err.Error(),
@@ -53,10 +46,9 @@ func FavoriteAction(ctx *gin.Context) {
 
 func FavoriteList(ctx *gin.Context) {
 
-	user, _ := ctx.Get("User")
-	user_, _ := user.(*models.User)
+	user := GetUserFromCtx(ctx)
 
-	videos := crud.GetUserLikeVideosByUserID(sql.DB, user_.ID)
+	videos := crud.GetUserLikeVideosByUserID(user.ID)
 
 	ctx.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{

@@ -2,8 +2,10 @@ package middlewares
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -19,7 +21,7 @@ func Sign(userID uint) (string, error) {
 }
 
 // 解析token, 仅传入token字符串, 仅判断是否转换成功与令牌是否超时
-func Parse(tokenString string) (uint, error) {
+func Parse(ctx *gin.Context, tokenString string) (uint, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("加密方式错误: %v", t.Header["alg"])
@@ -27,18 +29,30 @@ func Parse(tokenString string) (uint, error) {
 		return []byte(Secret), nil
 	})
 	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"StatusCode": 2,
+			"StatusMsg":  "token获取错误, 请重新登陆获取",
+		})
 		return 0, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !(ok && token.Valid) {
-		return 0, fmt.Errorf("转换失败")
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"StatusCode": 2,
+			"StatusMsg":  "token解析错误, 请重新登陆获取",
+		})
+		return 0, err
 	}
 	userID := uint(claims["id"].(float64))
 	createTime, _ := claims["nbf"].(int64)
 
 	if time.Now().Unix()-createTime > 2*int64(time.Hour) {
-		return 0, fmt.Errorf("token令牌超时")
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"StatusCode": 2,
+			"StatusMsg":  "token超时, 请重新登陆获取",
+		})
+		return 0, err
 	}
 
 	return userID, nil

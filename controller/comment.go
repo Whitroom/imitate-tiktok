@@ -1,11 +1,8 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
 
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
@@ -16,50 +13,54 @@ type CommentListResponse struct {
 	CommentList []Comment `json:"comment_list,omitempty"`
 }
 
-type CommentActionRequest struct {
-	VideoID     uint   `form:"video_id" binding:"required"`
-	ActionType  uint   `form:"action_type" binding:"required,min=1,max=2"`
-	CommentText string `form:"comment_text" binding:"omitempty"`
-	CommentID   uint   `form:"comment_id" binding:"omitempty"`
+type CommentResponse struct {
+	Response
+	Comment Comment `json:"comment,omitempty"`
 }
 
 func CommentAction(ctx *gin.Context) {
-	var request CommentActionRequest
-	var comment *models.Comment
-	err := ctx.ShouldBindQuery(&request)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "参数绑定错误: " + err.Error(),
-		})
+	var request struct {
+		VideoID     uint   `form:"video_id" binding:"required"`
+		ActionType  uint   `form:"action_type" binding:"required,min=1,max=2"`
+		CommentText string `form:"comment_text" binding:"omitempty"`
+		CommentID   uint   `form:"comment_id" binding:"omitempty"`
+	}
+
+	if !BindAndValid(ctx, &request) {
 		return
 	}
-	user_, _ := ctx.Get("User")
-	user, _ := user_.(*models.User)
+	user := GetUserFromCtx(ctx)
 	if request.ActionType == 1 {
-		comment = crud.CreateComment(sql.DB, &models.Comment{
+		comment := crud.CreateComment(&models.Comment{
 			UserID:  user.ID,
 			VideoID: request.VideoID,
 			Content: request.CommentText,
 		})
+		ctx.JSON(http.StatusOK, CommentResponse{
+			Response: Response{
+				StatusCode: 0,
+				StatusMsg:  "添加评论成功",
+			},
+			Comment: CommentModelChange(*comment),
+		})
 	} else {
-		crud.DeleteComment(sql.DB, request.CommentID)
+		crud.DeleteComment(request.CommentID)
+		ctx.JSON(http.StatusOK, Response{
+			StatusCode: 0,
+			StatusMsg:  "评论删除成功",
+		})
 	}
-	ctx.JSON(http.StatusOK, CommentModelChange(*comment))
+
 }
 
 func CommentList(ctx *gin.Context) {
-	videoID, err := strconv.ParseUint(ctx.Query("video_id"), 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
-			StatusCode: 1,
-			StatusMsg:  "参数绑定错误",
-		})
+	videoID := QueryIDAndValid(ctx, "video_id")
+	if videoID == 0 {
+		return
 	}
-	comments := crud.GetComments(sql.DB, uint(videoID))
-	fmt.Println(comments)
+
 	ctx.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},
-		CommentList: CommentsModelChange(comments),
+		CommentList: CommentsModelChange(crud.GetComments(videoID)),
 	})
 }

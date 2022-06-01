@@ -18,4 +18,10 @@ cd imitate-tiktok
 
 4. (1) 如果使用`vscode`，通过`vscode`进入该目录，点击`main.go`后，直接按下`F5`即可运行。
 
+    (2) 如果使用命令行，输入
+    ```bash
+    go build && ./imitate-tiktok
+    ```
+    即可运行。
+
 其他仍在补充...

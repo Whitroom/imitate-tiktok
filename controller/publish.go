@@ -2,11 +2,12 @@ package controller
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
@@ -20,20 +21,16 @@ type VideoListResponse struct {
 func Publish(ctx *gin.Context) {
 
 	token := ctx.PostForm("token")
-	userID, err := middlewares.Parse(token)
+	userID, err := middlewares.Parse(ctx, token)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"code":    2,
-			"message": "token获取错误, 请重新登陆获取",
-		})
 		return
 	}
 
 	data, err := ctx.FormFile("data")
 	if err != nil {
 		ctx.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
+			StatusCode: 2,
+			StatusMsg:  "文件获取错误: " + err.Error(),
 		})
 		return
 	}
@@ -49,43 +46,47 @@ func Publish(ctx *gin.Context) {
 	title := ctx.PostForm("title")
 	fmt.Println(title)
 	if title == "" {
-		ctx.JSON(http.StatusBadRequest, Response{StatusCode: 2, StatusMsg: "Title not Found"})
+		ctx.JSON(http.StatusBadRequest, Response{
+			StatusCode: 2,
+			StatusMsg:  "标题获取错误",
+		})
 	}
 	filename := filepath.Base(data.Filename)
 
-	finalName := fmt.Sprintf("%d_%s_%s", userID, title, filename)
+	rand.Seed(time.Now().Unix())
+	finalName := fmt.Sprintf("%d_%s", rand.Intn(100000000), filename)
+
+	crud.CreateVideo(&models.Video{
+		AuthorID: userID,
+		Title:    finalName,
+	})
+
 	saveFile := filepath.Join("./public/", finalName)
 	if err := ctx.SaveUploadedFile(data, saveFile); err != nil {
 		ctx.JSON(http.StatusOK, Response{
-			StatusCode: 1,
+			StatusCode: 4,
 			StatusMsg:  err.Error(),
 		})
 		return
 	}
 
-	crud.CreateVideo(sql.DB, &models.Video{
-		AuthorID: userID,
-		Title:    finalName,
-	})
-
 	ctx.JSON(http.StatusOK, Response{
 		StatusCode: 0,
-		StatusMsg:  finalName + " uploaded successfully",
+		StatusMsg:  finalName + " 上传成功",
 	})
 }
 
 func PublishList(ctx *gin.Context) {
-	user_, _ := ctx.Get("User")
-	user, _ := user_.(*models.User)
-	videos := crud.GetUserPublishVideosByID(sql.DB, user.ID)
-	modelVideos := VideosModelChange(videos)
-	for i := 0; i < len(modelVideos); i++ {
-		modelVideos[i].IsFavorite = crud.IsUserFavoriteVideo(sql.DB, user.ID, uint(modelVideos[i].Id))
+	user := GetUserFromCtx(ctx)
+	videos := crud.GetUserPublishVideosByID(user.ID)
+	responseVideos := VideosModelChange(videos)
+	for i := 0; i < len(responseVideos); i++ {
+		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(user.ID, uint(responseVideos[i].ID))
 	}
 	ctx.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{
 			StatusCode: 0,
 		},
-		VideoList: modelVideos,
+		VideoList: responseVideos,
 	})
 }

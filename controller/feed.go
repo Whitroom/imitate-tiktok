@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"github.com/gin-gonic/gin"
 )
@@ -29,22 +28,18 @@ func Feed(ctx *gin.Context) {
 	var userID uint
 	if token != "" {
 		var err error
-		userID, err = middlewares.Parse(token)
+		userID, err = middlewares.Parse(ctx, token)
 		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, Response{
-				StatusCode: 1,
-				StatusMsg:  "token校验失败",
-			})
 			return
 		}
 
 	} else {
 		userID = 0
 	}
-	videos := crud.GetVideos(sql.DB, latestTime, uint(userID))
-	modelVideos := VideosModelChange(videos)
-	for i := 0; i < len(modelVideos); i++ {
-		modelVideos[i].IsFavorite = crud.IsUserFavoriteVideo(sql.DB, uint(userID), uint(modelVideos[i].Id))
+	videos := crud.GetVideos(latestTime, userID)
+	responseVideos := VideosModelChange(videos)
+	for i := 0; i < len(responseVideos); i++ {
+		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(userID, uint(responseVideos[i].ID))
 	}
 	if len(videos)-1 < 0 {
 		nextTime = 0
@@ -53,7 +48,7 @@ func Feed(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, FeedResponse{
 		Response:  Response{StatusCode: 0},
-		VideoList: modelVideos,
+		VideoList: responseVideos,
 		NextTime:  nextTime,
 	})
 }

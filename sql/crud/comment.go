@@ -1,23 +1,29 @@
 package crud
 
 import (
+	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
-	"gorm.io/gorm"
 )
 
-func CreateComment(db *gorm.DB, comment *models.Comment) *models.Comment {
-	db.Create(&comment).Commit()
+func CreateComment(comment *models.Comment) *models.Comment {
+	sql.DB.Create(&comment).Commit()
 	return comment
 }
 
-func DeleteComment(db *gorm.DB, commentID uint) *models.Comment {
+func DeleteComment(commentID uint) {
 	var comment *models.Comment
-	db.Model(&comment).Delete("id = ?", commentID).Commit()
-	return comment
+	sql.DB.Model(&comment).Delete("id = ?", commentID).Commit()
 }
 
-func GetComments(db *gorm.DB, videoID uint) []models.Comment {
+func GetComments(videoID uint) []models.Comment {
 	var comments []models.Comment
-	db.Where("video_id = ?", videoID).Order("created_at desc").Find(&comments)
+	sql.DB.Where("video_id = ?", videoID).Order("created_at desc").Find(&comments)
 	return comments
+}
+
+func GetVideoCommentsCountByID(videoID uint) int64 {
+	var count int64
+	sql.DB.Raw("select count(*) from comments"+
+		" where video_id = ? and deleted_at is not null", videoID).Scan(&count)
+	return count
 }
