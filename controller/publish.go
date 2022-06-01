@@ -54,7 +54,7 @@ func Publish(ctx *gin.Context) {
 	filename := filepath.Base(data.Filename)
 
 	rand.Seed(time.Now().Unix())
-	finalName := fmt.Sprintf("%d_%s", rand.Int(), filename)
+	finalName := fmt.Sprintf("%d_%s", rand.Intn(100000000), filename)
 
 	crud.CreateVideo(&models.Video{
 		AuthorID: userID,
