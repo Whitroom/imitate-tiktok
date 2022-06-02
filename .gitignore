@@ -28,6 +28,8 @@ confs/database.json
 
 # Static Files
 public/*.mp4
+public/covers/*.jpg
+!/public/covers/bear.jpg
 !/public/bear.mp4
 
 # Logs
