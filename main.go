@@ -1,7 +1,9 @@
 package main
 
 import (
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 
@@ -9,6 +11,9 @@ import (
 )
 
 func main() {
+	f, _ := os.Create("gin.log")
+	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
+
 	r := gin.Default()
 
 	sql.InitDatabase()

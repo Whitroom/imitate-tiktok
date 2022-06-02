@@ -29,3 +29,6 @@ confs/database.json
 # Static Files
 public/*.mp4
 !/public/bear.mp4
+
+# Logs
+gin.log
