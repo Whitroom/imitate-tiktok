@@ -56,11 +56,6 @@ func Publish(ctx *gin.Context) {
 	rand.Seed(time.Now().Unix())
 	finalName := fmt.Sprintf("%d_%s", rand.Intn(100000000), filename)
 
-	crud.CreateVideo(&models.Video{
-		AuthorID: userID,
-		Title:    finalName,
-	})
-
 	saveFile := filepath.Join("./public/", finalName)
 	if err := ctx.SaveUploadedFile(data, saveFile); err != nil {
 		ctx.JSON(http.StatusOK, Response{
@@ -69,6 +64,11 @@ func Publish(ctx *gin.Context) {
 		})
 		return
 	}
+
+	crud.CreateVideo(&models.Video{
+		AuthorID: userID,
+		Title:    finalName,
+	})
 
 	ctx.JSON(http.StatusOK, Response{
 		StatusCode: 0,
