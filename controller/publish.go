@@ -2,8 +2,10 @@ package controller
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -44,7 +46,6 @@ func Publish(ctx *gin.Context) {
 	}
 
 	title := ctx.PostForm("title")
-	fmt.Println(title)
 	if title == "" {
 		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 2,
@@ -58,8 +59,20 @@ func Publish(ctx *gin.Context) {
 
 	saveFile := filepath.Join("./public/", finalName)
 	if err := ctx.SaveUploadedFile(data, saveFile); err != nil {
-		ctx.JSON(http.StatusOK, Response{
+		ctx.JSON(http.StatusInternalServerError, Response{
 			StatusCode: 4,
+			StatusMsg:  err.Error(),
+		})
+		return
+	}
+
+	cmd := exec.Command("ffmpeg", "-i", "public/"+finalName,
+		"-frames:v", "1", "-f", "image2",
+		"public/covers/"+finalName[:len(finalName)-4]+".jpg")
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("cmd.Run() failed with %s\n", err)
+		ctx.JSON(http.StatusInternalServerError, Response{
+			StatusCode: 5,
 			StatusMsg:  err.Error(),
 		})
 		return
