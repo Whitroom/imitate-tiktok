@@ -37,12 +37,26 @@ func RelationAction(ctx *gin.Context) {
 			})
 			return
 		}
+		if crud.IsUserFollow(user.ID, request.ToUserID) {
+			ctx.JSON(http.StatusBadRequest, Response{
+				StatusCode: 4,
+				StatusMsg:  "已关注过用户",
+			})
+			return
+		}
 	} else {
 		_, err := crud.CancelSubscribeUser(user.ID, request.ToUserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
-				StatusCode: 4,
+				StatusCode: 3,
 				StatusMsg:  err.Error(),
+			})
+			return
+		}
+		if !crud.IsUserFollow(user.ID, request.ToUserID) {
+			ctx.JSON(http.StatusBadRequest, Response{
+				StatusCode: 4,
+				StatusMsg:  "未关注过用户",
 			})
 			return
 		}

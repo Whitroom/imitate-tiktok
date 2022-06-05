@@ -44,15 +44,13 @@ func Register(ctx *gin.Context) {
 	if !BindAndValid(ctx, &request) {
 		return
 	}
-
-	if crud.GetUserByName(request.Username) == nil {
+	if crud.GetUserByName(request.Username) != nil {
 		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 2,
 			StatusMsg:  "存在用户姓名",
 		})
 		return
 	}
-
 	newUser := crud.CreateUser(&models.User{
 		Name:     request.Username,
 		Password: hashEncode(request.Password),

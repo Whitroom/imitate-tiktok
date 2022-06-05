@@ -27,11 +27,25 @@ func FavoriteAction(ctx *gin.Context) {
 			})
 			return
 		}
+		if crud.IsUserFavoriteVideo(user.ID, request.VideoID) {
+			ctx.JSON(http.StatusBadRequest, Response{
+				StatusCode: 3,
+				StatusMsg:  "已点赞过视频",
+			})
+			return
+		}
 	} else {
 		if err := crud.UserDislikeVideo(user.ID, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
-				StatusCode: 3,
+				StatusCode: 2,
 				StatusMsg:  err.Error(),
+			})
+			return
+		}
+		if crud.IsUserFavoriteVideo(user.ID, request.VideoID) {
+			ctx.JSON(http.StatusBadRequest, Response{
+				StatusCode: 3,
+				StatusMsg:  "未点赞过视频",
 			})
 			return
 		}
