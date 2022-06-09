@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"time"
+	"unicode/utf8"
 
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
@@ -30,7 +31,7 @@ func Publish(ctx *gin.Context) {
 
 	data, err := ctx.FormFile("data")
 	if err != nil {
-		ctx.JSON(http.StatusOK, Response{
+		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 2,
 			StatusMsg:  "文件获取错误: " + err.Error(),
 		})
@@ -46,7 +47,7 @@ func Publish(ctx *gin.Context) {
 	}
 
 	title := ctx.PostForm("title")
-	if title == "" {
+	if title == "" || utf8.RuneCountInString(title) > 20 {
 		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 2,
 			StatusMsg:  "标题获取错误",

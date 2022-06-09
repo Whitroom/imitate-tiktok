@@ -31,6 +31,13 @@ func CommentAction(ctx *gin.Context) {
 	}
 	user := GetUserFromCtx(ctx)
 	if request.ActionType == 1 {
+		if len(request.CommentText) == 0 {
+			ctx.JSON(http.StatusBadRequest, Response{
+				StatusCode: 1,
+				StatusMsg:  "评论文本为空",
+			})
+			return
+		}
 		comment := crud.CreateComment(&models.Comment{
 			UserID:  user.ID,
 			VideoID: request.VideoID,
@@ -44,6 +51,13 @@ func CommentAction(ctx *gin.Context) {
 			Comment: CommentModelChange(*comment),
 		})
 	} else {
+		if request.CommentID == 0 {
+			ctx.JSON(http.StatusBadRequest, Response{
+				StatusCode: 1,
+				StatusMsg:  "删除失败",
+			})
+			return
+		}
 		crud.DeleteComment(request.CommentID)
 		ctx.JSON(http.StatusOK, Response{
 			StatusCode: 0,
