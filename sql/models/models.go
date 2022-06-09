@@ -25,7 +25,7 @@ type Video struct {
 	Title         string    `gorm:"size:30"`
 	Author        User      `gorm:"reference:ID"`
 	UserFavorites []User    `gorm:"many2many:user_favorite_videos"`
-	Comments      []Comment `gorm:"many2many:Comment;joinForeignKey:VideoID"`
+	Comments      []Comment `gorm:"many2many:comments;joinForeignKey:VideoID"`
 }
 
 type Comment struct {
