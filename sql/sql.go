@@ -38,3 +38,7 @@ func InitDatabase() {
 	db.AutoMigrate(&models.User{}, &models.Video{}, &models.Comment{})
 	DB = db
 }
+
+func GetDB() *gorm.DB {
+	return DB
+}

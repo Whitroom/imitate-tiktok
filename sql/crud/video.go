@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"time"
 
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
+	"gorm.io/gorm"
 )
 
-func CreateVideo(video *models.Video) *models.Video {
-	sql.DB.Create(&video).Commit()
+func CreateVideo(db *gorm.DB, video *models.Video) *models.Video {
+	db.Create(&video).Commit()
 	return video
 }
 
-func GetVideos(latestTime int64, userID uint) []models.Video {
+func GetVideos(db *gorm.DB, latestTime int64, userID uint) []models.Video {
 	var videos []models.Video
-	statement := sql.DB.Preload("Author").Limit(30)
+	statement := db.Preload("Author").Limit(30)
 	if latestTime != 0 {
 		statement = statement.Where("created_at < ?",
 			time.Unix(latestTime/1000+43200, 0).Format("2006-01-02 15:04:05"))
@@ -27,24 +27,24 @@ func GetVideos(latestTime int64, userID uint) []models.Video {
 	return videos
 }
 
-func GetUserPublishVideosByID(userID uint) []models.Video {
+func GetUserPublishVideosByID(db *gorm.DB, userID uint) []models.Video {
 	var videos []models.Video
-	sql.DB.Preload("Author").Where("author_id = ?", userID).Find(&videos)
+	db.Preload("Author").Where("author_id = ?", userID).Find(&videos)
 	return videos
 }
 
-func GetVideoByID(videoID uint) (*models.Video, error) {
+func GetVideoByID(db *gorm.DB, videoID uint) (*models.Video, error) {
 	var video *models.Video
-	sql.DB.First(&video, videoID)
+	db.First(&video, videoID)
 	if video == nil {
 		return nil, fmt.Errorf("未找到视频")
 	}
 	return video, nil
 }
 
-func GetVideoUserFavoritesByID(videoID uint) []models.User {
+func GetVideoUserFavoritesByID(db *gorm.DB, videoID uint) []models.User {
 	var UserFavorites []models.User
-	sql.DB.Raw("select * from users where id in("+
+	db.Raw("select * from users where id in("+
 		"    select author_id from "+
 		"videos where author_id= ?)", videoID).Scan(&UserFavorites)
 	return UserFavorites

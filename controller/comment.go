@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,8 @@ type CommentResponse struct {
 }
 
 func CommentAction(ctx *gin.Context) {
+	db := sql.GetDB()
+
 	var request struct {
 		VideoID     uint   `form:"video_id" binding:"required"`
 		ActionType  uint   `form:"action_type" binding:"required,min=1,max=2"`
@@ -38,7 +41,7 @@ func CommentAction(ctx *gin.Context) {
 			})
 			return
 		}
-		comment := crud.CreateComment(&models.Comment{
+		comment := crud.CreateComment(db, &models.Comment{
 			UserID:  user.ID,
 			VideoID: request.VideoID,
 			Content: request.CommentText,
@@ -48,7 +51,7 @@ func CommentAction(ctx *gin.Context) {
 				StatusCode: 0,
 				StatusMsg:  "添加评论成功",
 			},
-			Comment: CommentModelChange(*comment),
+			Comment: CommentModelChange(db, *comment),
 		})
 	} else {
 		if request.CommentID == 0 {
@@ -58,7 +61,7 @@ func CommentAction(ctx *gin.Context) {
 			})
 			return
 		}
-		crud.DeleteComment(request.CommentID)
+		crud.DeleteComment(db, request.CommentID)
 		ctx.JSON(http.StatusOK, Response{
 			StatusCode: 0,
 			StatusMsg:  "评论删除成功",
@@ -68,6 +71,8 @@ func CommentAction(ctx *gin.Context) {
 }
 
 func CommentList(ctx *gin.Context) {
+	db := sql.GetDB()
+
 	videoID := QueryIDAndValid(ctx, "video_id")
 	if videoID == 0 {
 		return
@@ -75,6 +80,6 @@ func CommentList(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},
-		CommentList: CommentsModelChange(crud.GetComments(videoID)),
+		CommentList: CommentsModelChange(db, crud.GetComments(db, videoID)),
 	})
 }

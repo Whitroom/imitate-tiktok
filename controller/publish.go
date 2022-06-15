@@ -11,6 +11,7 @@ import (
 	"unicode/utf8"
 
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
+	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,7 @@ type VideoListResponse struct {
 }
 
 func Publish(ctx *gin.Context) {
+	db := sql.GetDB()
 
 	token := ctx.PostForm("token")
 	userID, err := middlewares.Parse(ctx, token)
@@ -79,7 +81,7 @@ func Publish(ctx *gin.Context) {
 		return
 	}
 
-	crud.CreateVideo(&models.Video{
+	crud.CreateVideo(db, &models.Video{
 		AuthorID: userID,
 		Title:    finalName,
 	})
@@ -91,11 +93,13 @@ func Publish(ctx *gin.Context) {
 }
 
 func PublishList(ctx *gin.Context) {
+	db := sql.GetDB()
+
 	user := GetUserFromCtx(ctx)
-	videos := crud.GetUserPublishVideosByID(user.ID)
-	responseVideos := VideosModelChange(videos)
+	videos := crud.GetUserPublishVideosByID(db, user.ID)
+	responseVideos := VideosModelChange(db, videos)
 	for i := 0; i < len(responseVideos); i++ {
-		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(user.ID, uint(responseVideos[i].ID))
+		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(db, user.ID, uint(responseVideos[i].ID))
 	}
 	ctx.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{
