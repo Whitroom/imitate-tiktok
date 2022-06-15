@@ -41,7 +41,7 @@ func CommentAction(ctx *gin.Context) {
 			})
 			return
 		}
-		comment := crud.CreateComment(db, &models.Comment{
+		comment := crud.CreateComment(&db, &models.Comment{
 			UserID:  user.ID,
 			VideoID: request.VideoID,
 			Content: request.CommentText,
@@ -51,7 +51,7 @@ func CommentAction(ctx *gin.Context) {
 				StatusCode: 0,
 				StatusMsg:  "添加评论成功",
 			},
-			Comment: CommentModelChange(db, *comment),
+			Comment: CommentModelChange(&db, *comment),
 		})
 	} else {
 		if request.CommentID == 0 {
@@ -61,7 +61,7 @@ func CommentAction(ctx *gin.Context) {
 			})
 			return
 		}
-		crud.DeleteComment(db, request.CommentID)
+		crud.DeleteComment(&db, request.CommentID)
 		ctx.JSON(http.StatusOK, Response{
 			StatusCode: 0,
 			StatusMsg:  "评论删除成功",
@@ -80,6 +80,6 @@ func CommentList(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},
-		CommentList: CommentsModelChange(db, crud.GetComments(db, videoID)),
+		CommentList: CommentsModelChange(&db, crud.GetComments(&db, videoID)),
 	})
 }

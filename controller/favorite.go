@@ -23,14 +23,14 @@ func FavoriteAction(ctx *gin.Context) {
 	user := GetUserFromCtx(ctx)
 
 	if request.ActionType == 1 {
-		if crud.IsUserFavoriteVideo(db, user.ID, request.VideoID) {
+		if crud.IsUserFavoriteVideo(&db, user.ID, request.VideoID) {
 			ctx.JSON(http.StatusBadRequest, Response{
 				StatusCode: 3,
 				StatusMsg:  "已点赞过视频",
 			})
 			return
 		}
-		if err := crud.UserLikeVideo(db, user.ID, request.VideoID); err != nil {
+		if err := crud.UserLikeVideo(&db, user.ID, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 2,
 				StatusMsg:  err.Error(),
@@ -39,14 +39,14 @@ func FavoriteAction(ctx *gin.Context) {
 		}
 	} else {
 
-		if !crud.IsUserFavoriteVideo(db, user.ID, request.VideoID) {
+		if !crud.IsUserFavoriteVideo(&db, user.ID, request.VideoID) {
 			ctx.JSON(http.StatusBadRequest, Response{
 				StatusCode: 3,
 				StatusMsg:  "未点赞过视频",
 			})
 			return
 		}
-		if err := crud.UserDislikeVideo(db, user.ID, request.VideoID); err != nil {
+		if err := crud.UserDislikeVideo(&db, user.ID, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 2,
 				StatusMsg:  err.Error(),
@@ -67,12 +67,12 @@ func FavoriteList(ctx *gin.Context) {
 
 	userID := QueryIDAndValid(ctx, "user_id")
 
-	videos := crud.GetUserLikeVideosByUserID(db, userID)
+	videos := crud.GetUserLikeVideosByUserID(&db, userID)
 
 	ctx.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{
 			StatusCode: 0,
 		},
-		VideoList: VideosModelChange(db, videos),
+		VideoList: VideosModelChange(&db, videos),
 	})
 }

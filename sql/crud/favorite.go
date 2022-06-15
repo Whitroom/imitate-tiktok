@@ -11,10 +11,10 @@ func UserLikeVideo(db *gorm.DB, userID uint, videoID uint) error {
 	var user *models.User
 	var video *models.Video
 
-	db.First(&user, userID)
-	db.First(&video, videoID)
+	err1 := db.First(&user, userID).Error
+	err2 := db.First(&video, videoID).Error
 
-	if user == nil || video == nil {
+	if err1 != nil || err2 != nil {
 		return fmt.Errorf("找不到用户或视频")
 	}
 
@@ -28,10 +28,10 @@ func UserDislikeVideo(db *gorm.DB, userID uint, videoID uint) error {
 	var user *models.User
 	var video *models.Video
 
-	db.First(&user, userID)
-	db.First(&video, videoID)
+	err1 := db.First(&user, userID).Error
+	err2 := db.First(&video, videoID).Error
 
-	if user == nil || video == nil {
+	if err1 != nil || err2 != nil {
 		return fmt.Errorf("找不到用户或视频")
 	}
 

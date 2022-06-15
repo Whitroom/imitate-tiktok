@@ -81,7 +81,7 @@ func Publish(ctx *gin.Context) {
 		return
 	}
 
-	crud.CreateVideo(db, &models.Video{
+	crud.CreateVideo(&db, &models.Video{
 		AuthorID: userID,
 		Title:    finalName,
 	})
@@ -96,10 +96,10 @@ func PublishList(ctx *gin.Context) {
 	db := sql.GetDB()
 
 	user := GetUserFromCtx(ctx)
-	videos := crud.GetUserPublishVideosByID(db, user.ID)
-	responseVideos := VideosModelChange(db, videos)
+	videos := crud.GetUserPublishVideosByID(&db, user.ID)
+	responseVideos := VideosModelChange(&db, videos)
 	for i := 0; i < len(responseVideos); i++ {
-		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(db, user.ID, uint(responseVideos[i].ID))
+		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(&db, user.ID, uint(responseVideos[i].ID))
 	}
 	ctx.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{

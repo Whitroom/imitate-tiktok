@@ -18,8 +18,8 @@ func CreateUser(db *gorm.DB, user *models.User) *models.User {
 
 func GetUserByID(db *gorm.DB, userID uint) (*models.User, error) {
 	var user *models.User
-	db.First(&user, userID)
-	if user == nil {
+	err := db.First(&user, userID).Error
+	if err != nil {
 		return nil, fmt.Errorf("未找到用户")
 	}
 	return user, nil
@@ -37,12 +37,12 @@ func GetUserByName(db *gorm.DB, name string) *models.User {
 
 func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.User, error) {
 	var subscriber, user *models.User
-	db.First(&subscriber, subscriberUserID)
-	db.First(&user, userID)
-	if subscriber == nil {
+	err1 := db.First(&subscriber, subscriberUserID).Error
+	err2 := db.First(&user, userID)
+	if err1 != nil {
 		return nil, fmt.Errorf("未找到关注人")
 	}
-	if user == nil {
+	if err2 != nil {
 		return nil, fmt.Errorf("未找到用户")
 	}
 	if err := db.Model(&user).Association("Subscribers").Append(subscriber); err != nil {
@@ -53,12 +53,12 @@ func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.Use
 
 func CancelSubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.User, error) {
 	var subscriber, user *models.User
-	db.First(&subscriber, subscriberUserID)
-	db.First(&user, userID)
-	if subscriber == nil {
+	err1 := db.First(&subscriber, subscriberUserID).Error
+	err2 := db.First(&user, userID)
+	if err1 != nil {
 		return nil, fmt.Errorf("未找到关注人")
 	}
-	if user == nil {
+	if err2 != nil {
 		return nil, fmt.Errorf("未找到用户")
 	}
 	if err := db.Model(&user).Association("Subscribers").Delete(subscriber); err != nil {

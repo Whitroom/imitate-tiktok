@@ -32,7 +32,7 @@ func RelationAction(ctx *gin.Context) {
 		return
 	}
 	if request.ActionType == 1 {
-		_, err := crud.SubscribeUser(db, user.ID, request.ToUserID)
+		_, err := crud.SubscribeUser(&db, user.ID, request.ToUserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 3,
@@ -40,7 +40,7 @@ func RelationAction(ctx *gin.Context) {
 			})
 			return
 		}
-		if crud.IsUserFollow(db, user.ID, request.ToUserID) {
+		if crud.IsUserFollow(&db, user.ID, request.ToUserID) {
 			ctx.JSON(http.StatusBadRequest, Response{
 				StatusCode: 4,
 				StatusMsg:  "已关注过用户",
@@ -48,7 +48,7 @@ func RelationAction(ctx *gin.Context) {
 			return
 		}
 	} else {
-		_, err := crud.CancelSubscribeUser(db, user.ID, request.ToUserID)
+		_, err := crud.CancelSubscribeUser(&db, user.ID, request.ToUserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 3,
@@ -56,7 +56,7 @@ func RelationAction(ctx *gin.Context) {
 			})
 			return
 		}
-		if !crud.IsUserFollow(db, user.ID, request.ToUserID) {
+		if !crud.IsUserFollow(&db, user.ID, request.ToUserID) {
 			ctx.JSON(http.StatusBadRequest, Response{
 				StatusCode: 4,
 				StatusMsg:  "未关注过用户",
@@ -77,8 +77,8 @@ func FollowList(ctx *gin.Context) {
 	if userID == 0 {
 		return
 	}
-	users := crud.GetUserSubscribersByID(db, userID)
-	responseUsers := UsersModelChange(db, users)
+	users := crud.GetUserSubscribersByID(&db, userID)
+	responseUsers := UsersModelChange(&db, users)
 	ctx.JSON(http.StatusOK, UserListResponse{
 		Response: Response{
 			StatusCode: 0,
@@ -94,11 +94,11 @@ func FollowerList(ctx *gin.Context) {
 	if userID == 0 {
 		return
 	}
-	users := crud.GetUserFollowersByID(db, uint(userID))
-	responseUsers := UsersModelChange(db, users)
+	users := crud.GetUserFollowersByID(&db, uint(userID))
+	responseUsers := UsersModelChange(&db, users)
 	for i := 0; i < len(responseUsers); i++ {
 		responseUsers[i].IsFollow = crud.IsUserFollow(
-			db, uint(responseUsers[i].ID), uint(userID),
+			&db, uint(responseUsers[i].ID), uint(userID),
 		)
 	}
 	ctx.JSON(http.StatusOK, UserListResponse{

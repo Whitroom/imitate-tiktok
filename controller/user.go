@@ -47,14 +47,14 @@ func Register(ctx *gin.Context) {
 	if !BindAndValid(ctx, &request) {
 		return
 	}
-	if crud.GetUserByName(db, request.Username) != nil {
+	if crud.GetUserByName(&db, request.Username) != nil {
 		ctx.JSON(http.StatusBadRequest, Response{
 			StatusCode: 2,
 			StatusMsg:  "存在用户姓名",
 		})
 		return
 	}
-	newUser := crud.CreateUser(db, &models.User{
+	newUser := crud.CreateUser(&db, &models.User{
 		Name:     request.Username,
 		Password: hashEncode(request.Password),
 		Content:  "",
@@ -86,7 +86,7 @@ func Login(ctx *gin.Context) {
 	if !BindAndValid(ctx, &request) {
 		return
 	}
-	existedUser := crud.GetUserByName(db, request.Username)
+	existedUser := crud.GetUserByName(&db, request.Username)
 
 	if existedUser == nil {
 		ctx.JSON(http.StatusNotFound, Response{
@@ -132,7 +132,7 @@ func UserInfo(ctx *gin.Context) {
 		if err != nil {
 			return
 		}
-		user, err = crud.GetUserByID(db, userID)
+		user, err = crud.GetUserByID(&db, userID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, Response{
 				StatusCode: 3,
@@ -147,7 +147,7 @@ func UserInfo(ctx *gin.Context) {
 		return
 	}
 
-	toUser, err := crud.GetUserByID(db, toUserID)
+	toUser, err := crud.GetUserByID(&db, toUserID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, Response{
 			StatusCode: 3,
@@ -156,9 +156,9 @@ func UserInfo(ctx *gin.Context) {
 		return
 	}
 
-	responseUser := UserModelChange(db, *toUser)
+	responseUser := UserModelChange(&db, *toUser)
 	if user != nil {
-		responseUser.IsFollow = crud.IsUserFollow(db, user.ID, toUserID)
+		responseUser.IsFollow = crud.IsUserFollow(&db, user.ID, toUserID)
 	} else {
 		responseUser.IsFollow = false
 	}

@@ -35,8 +35,8 @@ func GetUserPublishVideosByID(db *gorm.DB, userID uint) []models.Video {
 
 func GetVideoByID(db *gorm.DB, videoID uint) (*models.Video, error) {
 	var video *models.Video
-	db.First(&video, videoID)
-	if video == nil {
+	err := db.First(&video, videoID)
+	if err != nil {
 		return nil, fmt.Errorf("未找到视频")
 	}
 	return video, nil

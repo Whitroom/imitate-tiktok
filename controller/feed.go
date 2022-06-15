@@ -39,10 +39,10 @@ func Feed(ctx *gin.Context) {
 	} else {
 		userID = 0
 	}
-	videos := crud.GetVideos(db, latestTime, userID)
-	responseVideos := VideosModelChange(db, videos)
+	videos := crud.GetVideos(&db, latestTime, userID)
+	responseVideos := VideosModelChange(&db, videos)
 	for i := 0; i < len(responseVideos); i++ {
-		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(db, userID, uint(responseVideos[i].ID))
+		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(&db, userID, uint(responseVideos[i].ID))
 	}
 	if len(videos)-1 < 0 {
 		nextTime = 0
