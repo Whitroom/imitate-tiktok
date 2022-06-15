@@ -17,6 +17,7 @@ func initRouter(r *gin.Engine) {
 	apiRouter.GET("/feed/", controller.Feed)
 	apiRouter.POST("/user/register/", controller.Register)
 	apiRouter.POST("/user/login/", controller.Login)
+	apiRouter.GET("/user/", controller.UserInfo)
 
 	// extra apis - I
 	apiRouter.GET("/comment/list/", controller.CommentList)
@@ -27,7 +28,6 @@ func initRouter(r *gin.Engine) {
 
 	auth := apiRouter.Group("/", middlewares.AuthUser())
 	auth.GET("/publish/list/", controller.PublishList)
-	auth.GET("/user/", controller.UserInfo)
 
 	// extra apis - I
 	auth.POST("/favorite/action/", controller.FavoriteAction)

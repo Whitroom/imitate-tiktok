@@ -118,7 +118,23 @@ func Login(ctx *gin.Context) {
 // 查询用户信息接口函数。
 func UserInfo(ctx *gin.Context) {
 
-	user := GetUserFromCtx(ctx)
+	var user *models.User
+
+	token := ctx.Query("token")
+	if token != "" {
+		userID, err := middlewares.Parse(ctx, token)
+		if err != nil {
+			return
+		}
+		user, err = crud.GetUserByID(userID)
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, Response{
+				StatusCode: 3,
+				StatusMsg:  "找不到用户",
+			})
+			return
+		}
+	}
 
 	toUserID := QueryIDAndValid(ctx, "user_id")
 	if toUserID == 0 {

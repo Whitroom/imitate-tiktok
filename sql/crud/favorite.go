@@ -44,9 +44,9 @@ func UserDislikeVideo(userID uint, videoID uint) error {
 }
 
 func GetUserLikeVideosByUserID(userID uint) []models.Video {
-	var user *models.User
-	sql.DB.Preload("FavoriteVideos").Find(&user, userID)
-	return user.FavoriteVideos
+	var videos []models.Video
+	sql.DB.Raw("select * from videos where id in (select video_id from user_favorite_videos where user_id = ?)", userID).Scan(&videos)
+	return videos
 }
 
 func GetVideoLikesCount(videoID uint) int64 {
@@ -56,12 +56,11 @@ func GetVideoLikesCount(videoID uint) int64 {
 }
 
 func IsUserFavoriteVideo(userID, videoID uint) bool {
-	var video *models.Video
 	if userID == 0 {
 		return false
 	}
-	sql.DB.Raw("select * from videos where id in "+
+	err := sql.DB.Raw("select * from videos where id in "+
 		"(select video_id from user_favorite_videos where user_id = ? and video_id = ?)",
-		userID, videoID).Scan(&video)
-	return video != nil
+		userID, videoID).Scan(&models.Video{}).Error
+	return err == nil
 }

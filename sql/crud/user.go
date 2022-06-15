@@ -8,7 +8,11 @@ import (
 )
 
 func CreateUser(user *models.User) *models.User {
-	sql.DB.Create(&user).Commit()
+	statement := sql.DB.Create(&user)
+	if err := statement.Error; err != nil {
+		return nil
+	}
+	statement.Commit()
 	return user
 }
 
@@ -23,7 +27,11 @@ func GetUserByID(userID uint) (*models.User, error) {
 
 func GetUserByName(name string) *models.User {
 	var user *models.User
-	sql.DB.Where(&models.User{Name: name}).First(&user)
+	err := sql.DB.Where(&models.User{Name: name}).First(&user).Error
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil
+	}
 	return user
 }
 
@@ -37,7 +45,9 @@ func SubscribeUser(userID uint, subscriberUserID uint) (*models.User, error) {
 	if user == nil {
 		return nil, fmt.Errorf("未找到用户")
 	}
-	sql.DB.Model(&user).Association("Subscribers").Append(subscriber)
+	if err := sql.DB.Model(&user).Association("Subscribers").Append(subscriber); err != nil {
+		return nil, fmt.Errorf("操作失败")
+	}
 	return user, nil
 }
 
