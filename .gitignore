@@ -25,6 +25,7 @@ go.work
 
 # Database Config
 confs/database.json
+confs/config.json
 
 # Static Files
 public/*.mp4

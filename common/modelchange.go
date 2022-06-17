@@ -60,6 +60,6 @@ func VideoModelChange(db *gorm.DB, video *models.Video) response.Video {
 		IsFavorite:    true,
 		// 以下是测试数据
 		PlayUrl:  "http://192.168.1.4:8080/static/" + video.Title,
-		CoverUrl: "http://192.168.1.4:8080/static/covers/" + video.Title[:len(video.Title)-4] + ".jpg",
+		CoverUrl: "http://192.168.1.4:8080/static/covers/" + video.Title[:len(video.Title)-3] + "jpg",
 	}
 }
