@@ -54,6 +54,7 @@ func CommentAction(ctx *gin.Context) {
 			return
 		}
 		if err := crud.DeleteComment(db, request.CommentID); err != nil {
+			db.Rollback()
 			ctx.JSON(http.StatusNotFound, response.Response{
 				StatusCode: response.NOTFOUND,
 				StatusMsg:  "找不到相应的评论",
