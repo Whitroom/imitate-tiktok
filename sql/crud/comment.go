@@ -11,9 +11,9 @@ func CreateComment(db *gorm.DB, comment *models.Comment) *models.Comment {
 	return comment
 }
 
-func DeleteComment(db *gorm.DB, commentID uint) {
+func DeleteComment(db *gorm.DB, commentID uint) error {
 	var comment *models.Comment
-	sql.DB.Model(&comment).Delete("id = ?", commentID).Commit()
+	return sql.DB.Model(&comment).Delete("id = ?", commentID).Commit().Error
 }
 
 func GetComments(db *gorm.DB, videoID uint) []models.Comment {

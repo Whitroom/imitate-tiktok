@@ -35,15 +35,11 @@ func GetUserByName(db *gorm.DB, name string) *models.User {
 	return user
 }
 
-func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.User, error) {
-	var subscriber, user *models.User
+func SubscribeUser(db *gorm.DB, user *models.User, subscriberUserID uint) (*models.User, error) {
+	var subscriber *models.User
 	err1 := db.First(&subscriber, subscriberUserID).Error
-	err2 := db.First(&user, userID)
 	if err1 != nil {
 		return nil, fmt.Errorf("未找到关注人")
-	}
-	if err2 != nil {
-		return nil, fmt.Errorf("未找到用户")
 	}
 	if err := db.Model(&user).Association("Subscribers").Append(subscriber); err != nil {
 		return nil, fmt.Errorf("操作失败")
@@ -51,15 +47,11 @@ func SubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.Use
 	return user, nil
 }
 
-func CancelSubscribeUser(db *gorm.DB, userID uint, subscriberUserID uint) (*models.User, error) {
-	var subscriber, user *models.User
+func CancelSubscribeUser(db *gorm.DB, user *models.User, subscriberUserID uint) (*models.User, error) {
+	var subscriber *models.User
 	err1 := db.First(&subscriber, subscriberUserID).Error
-	err2 := db.First(&user, userID)
 	if err1 != nil {
 		return nil, fmt.Errorf("未找到关注人")
-	}
-	if err2 != nil {
-		return nil, fmt.Errorf("未找到用户")
 	}
 	if err := db.Model(&user).Association("Subscribers").Delete(subscriber); err != nil {
 		return nil, fmt.Errorf("关注不存在")
@@ -100,9 +92,9 @@ func IsUserFollow(db *gorm.DB, userID, anotherUserID uint) bool {
 	if userID == anotherUserID {
 		return false
 	}
-	var user *models.User
-	db.Raw("select * from users where id in"+
-		" (select user_id from subscribes where user_id = ? and subscriber_id = ?)",
-		userID, anotherUserID).Scan(&user)
-	return user != nil
+	var user_id uint
+	db.Raw(
+		"select user_id from subscribes where user_id = ? and subscriber_id = ?",
+		userID, anotherUserID).Scan(&user_id)
+	return user_id != 0
 }

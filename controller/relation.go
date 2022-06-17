@@ -15,7 +15,7 @@ func RelationAction(ctx *gin.Context) {
 
 	var request struct {
 		ToUserID   uint `binding:"required" form:"to_user_id"`
-		ActionType uint `binding:"required,min=1,max=2" form:"action_type"`
+		ActionType uint `binding:"required,gt=0,lt=3" form:"action_type"`
 	}
 	if !common.BindAndValid(ctx, &request) {
 		return
@@ -29,14 +29,6 @@ func RelationAction(ctx *gin.Context) {
 		return
 	}
 	if request.ActionType == 1 {
-		_, err := crud.SubscribeUser(db, user.ID, request.ToUserID)
-		if err != nil {
-			ctx.JSON(http.StatusNotFound, response.Response{
-				StatusCode: response.NOTFOUND,
-				StatusMsg:  err.Error(),
-			})
-			return
-		}
 		if crud.IsUserFollow(db, user.ID, request.ToUserID) {
 			ctx.JSON(http.StatusBadRequest, response.Response{
 				StatusCode: response.BADREQUEST,
@@ -44,8 +36,7 @@ func RelationAction(ctx *gin.Context) {
 			})
 			return
 		}
-	} else {
-		_, err := crud.CancelSubscribeUser(db, user.ID, request.ToUserID)
+		_, err := crud.SubscribeUser(db, user, request.ToUserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, response.Response{
 				StatusCode: response.NOTFOUND,
@@ -53,10 +44,19 @@ func RelationAction(ctx *gin.Context) {
 			})
 			return
 		}
+	} else {
 		if !crud.IsUserFollow(db, user.ID, request.ToUserID) {
 			ctx.JSON(http.StatusBadRequest, response.Response{
 				StatusCode: response.BADREQUEST,
 				StatusMsg:  "未关注过用户",
+			})
+			return
+		}
+		_, err := crud.CancelSubscribeUser(db, user, request.ToUserID)
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, response.Response{
+				StatusCode: response.NOTFOUND,
+				StatusMsg:  err.Error(),
 			})
 			return
 		}

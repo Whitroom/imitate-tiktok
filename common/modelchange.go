@@ -59,7 +59,7 @@ func VideoModelChange(db *gorm.DB, video *models.Video) response.Video {
 		CommentCount:  crud.GetVideoCommentsCountByID(db, video.ID),
 		IsFavorite:    true,
 		// 以下是测试数据
-		PlayUrl:  "http://your-machine-ip:8080/static/" + video.Title,
-		CoverUrl: "http://your-machine-ip:8080/static/covers/" + video.Title[:len(video.Title)-4] + ".jpg",
+		PlayUrl:  "http://192.168.1.4:8080/static/" + video.Title,
+		CoverUrl: "http://192.168.1.4:8080/static/covers/" + video.Title[:len(video.Title)-4] + ".jpg",
 	}
 }

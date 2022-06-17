@@ -32,7 +32,7 @@ func FavoriteAction(ctx *gin.Context) {
 			})
 			return
 		}
-		if err := crud.UserLikeVideo(db, user.ID, request.VideoID); err != nil {
+		if err := crud.UserLikeVideo(db, user, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, response.Response{
 				StatusCode: response.NOTFOUND,
 				StatusMsg:  err.Error(),
@@ -48,7 +48,7 @@ func FavoriteAction(ctx *gin.Context) {
 			})
 			return
 		}
-		if err := crud.UserDislikeVideo(db, user.ID, request.VideoID); err != nil {
+		if err := crud.UserDislikeVideo(db, user, request.VideoID); err != nil {
 			ctx.JSON(http.StatusNotFound, response.Response{
 				StatusCode: response.NOTFOUND,
 				StatusMsg:  err.Error(),

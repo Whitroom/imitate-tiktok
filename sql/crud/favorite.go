@@ -7,15 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
-func UserLikeVideo(db *gorm.DB, userID uint, videoID uint) error {
-	var user *models.User
+func UserLikeVideo(db *gorm.DB, user *models.User, videoID uint) error {
 	var video *models.Video
 
-	err1 := db.First(&user, userID).Error
-	err2 := db.First(&video, videoID).Error
+	err := db.First(&video, videoID).Error
 
-	if err1 != nil || err2 != nil {
-		return fmt.Errorf("找不到用户或视频")
+	if err != nil {
+		return fmt.Errorf("找不到视频")
 	}
 
 	db.Model(&user).Association("FavoriteVideos").Append(video)
@@ -24,14 +22,12 @@ func UserLikeVideo(db *gorm.DB, userID uint, videoID uint) error {
 	return nil
 }
 
-func UserDislikeVideo(db *gorm.DB, userID uint, videoID uint) error {
-	var user *models.User
+func UserDislikeVideo(db *gorm.DB, user *models.User, videoID uint) error {
 	var video *models.Video
 
-	err1 := db.First(&user, userID).Error
-	err2 := db.First(&video, videoID).Error
+	err := db.First(&video, videoID).Error
 
-	if err1 != nil || err2 != nil {
+	if err != nil {
 		return fmt.Errorf("找不到用户或视频")
 	}
 
@@ -56,11 +52,9 @@ func GetVideoLikesCount(db *gorm.DB, videoID uint) int64 {
 }
 
 func IsUserFavoriteVideo(db *gorm.DB, userID, videoID uint) bool {
-	if userID == 0 {
-		return false
-	}
-	err := db.Raw("select * from videos where id in "+
-		"(select video_id from user_favorite_videos where user_id = ? and video_id = ?)",
-		userID, videoID).Scan(&models.Video{}).Error
-	return err == nil
+	var video_id uint
+	db.Raw(
+		"select video_id from user_favorite_videos where user_id = ? and video_id = ?",
+		userID, videoID).Scan(&video_id)
+	return video_id != 0
 }

@@ -16,7 +16,7 @@ func CommentAction(ctx *gin.Context) {
 
 	var request struct {
 		VideoID     uint   `form:"video_id" binding:"required"`
-		ActionType  uint   `form:"action_type" binding:"required,min=1,max=2"`
+		ActionType  uint   `form:"action_type" binding:"required,gt=0,lt=3"`
 		CommentText string `form:"comment_text" binding:"omitempty"`
 		CommentID   uint   `form:"comment_id" binding:"omitempty"`
 	}
@@ -49,11 +49,17 @@ func CommentAction(ctx *gin.Context) {
 		if request.CommentID == 0 {
 			ctx.JSON(http.StatusBadRequest, response.Response{
 				StatusCode: response.BADREQUEST,
-				StatusMsg:  "删除失败",
+				StatusMsg:  "评论ID为空",
 			})
 			return
 		}
-		crud.DeleteComment(db, request.CommentID)
+		if err := crud.DeleteComment(db, request.CommentID); err != nil {
+			ctx.JSON(http.StatusNotFound, response.Response{
+				StatusCode: response.NOTFOUND,
+				StatusMsg:  "找不到相应的评论",
+			})
+			return
+		}
 		ctx.JSON(http.StatusOK, response.Response{
 			StatusCode: response.SUCCESS,
 			StatusMsg:  "评论删除成功",

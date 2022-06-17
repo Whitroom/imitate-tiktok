@@ -15,8 +15,8 @@ import (
 )
 
 type RegisterRequest struct {
-	Username string `json:"username" binding:"required" form:"username"`
-	Password string `json:"password" binding:"required" form:"password"`
+	Username string `json:"username" binding:"required,min=3,max=20" form:"username"`
+	Password string `json:"password" binding:"required,min=3,max=20" form:"password"`
 }
 
 func hashEncode(str string) string {
