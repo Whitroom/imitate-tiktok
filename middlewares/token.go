@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"gitee.com/Whitroom/imitate-tiktok/common/response"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
@@ -29,18 +30,18 @@ func Parse(ctx *gin.Context, tokenString string) (uint, error) {
 		return []byte(Secret), nil
 	})
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"StatusCode": 2,
-			"StatusMsg":  "token获取错误, 请重新登陆获取",
+		ctx.JSON(http.StatusUnauthorized, response.Response{
+			StatusCode: response.BADREQUEST,
+			StatusMsg:  "token获取错误, 请重新登陆获取",
 		})
 		return 0, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !(ok && token.Valid) {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"StatusCode": 2,
-			"StatusMsg":  "token解析错误, 请重新登陆获取",
+		ctx.JSON(http.StatusUnauthorized, response.Response{
+			StatusCode: response.BADREQUEST,
+			StatusMsg:  "token解析错误, 请重新登陆获取",
 		})
 		return 0, err
 	}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +23,7 @@ func InitSecret() {
 // 验证用户中间件, 若没有token会返回400, 验证失败会返回401, 找不到用户会返回404, 响应code为1, 2, 3
 func AuthUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		db := sql.GetSession()
 		token := ctx.Query("token")
 		if token == "" {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -31,12 +33,12 @@ func AuthUser() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		UserID, err := Parse(ctx, token)
+		userID, err := Parse(ctx, token)
 		if err != nil {
 			ctx.Abort()
 			return
 		}
-		User, err := crud.GetUserByID(UserID)
+		user, err := crud.GetUserByID(db, userID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, gin.H{
 				"StatusCode": 3,
@@ -45,7 +47,7 @@ func AuthUser() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		ctx.Set("User", User)
+		ctx.Set("User", user)
 		ctx.Next()
 	}
 }

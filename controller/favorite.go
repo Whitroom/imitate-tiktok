@@ -3,71 +3,79 @@ package controller
 import (
 	"net/http"
 
+	"gitee.com/Whitroom/imitate-tiktok/common"
+	"gitee.com/Whitroom/imitate-tiktok/common/response"
+	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"github.com/gin-gonic/gin"
 )
 
 func FavoriteAction(ctx *gin.Context) {
+	db := sql.GetSession()
+
 	var request struct {
 		VideoID    uint `form:"video_id" binding:"required"`
 		ActionType uint `form:"action_type" binding:"required,min=1,max=2"`
 	}
 
-	if !BindAndValid(ctx, &request) {
+	if !common.BindAndValid(ctx, &request) {
 		return
 	}
 
-	user := GetUserFromCtx(ctx)
+	user := common.GetUserFromCtx(ctx)
 
 	if request.ActionType == 1 {
-		if err := crud.UserLikeVideo(user.ID, request.VideoID); err != nil {
-			ctx.JSON(http.StatusNotFound, Response{
-				StatusCode: 2,
-				StatusMsg:  err.Error(),
-			})
-			return
-		}
-		if crud.IsUserFavoriteVideo(user.ID, request.VideoID) {
-			ctx.JSON(http.StatusBadRequest, Response{
-				StatusCode: 3,
+		if crud.IsUserFavoriteVideo(db, user.ID, request.VideoID) {
+			ctx.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: response.BADREQUEST,
 				StatusMsg:  "已点赞过视频",
 			})
 			return
 		}
-	} else {
-		if err := crud.UserDislikeVideo(user.ID, request.VideoID); err != nil {
-			ctx.JSON(http.StatusNotFound, Response{
-				StatusCode: 2,
+		if err := crud.UserLikeVideo(db, user, request.VideoID); err != nil {
+			ctx.JSON(http.StatusNotFound, response.Response{
+				StatusCode: response.NOTFOUND,
 				StatusMsg:  err.Error(),
 			})
 			return
 		}
-		if crud.IsUserFavoriteVideo(user.ID, request.VideoID) {
-			ctx.JSON(http.StatusBadRequest, Response{
-				StatusCode: 3,
+	} else {
+
+		if !crud.IsUserFavoriteVideo(db, user.ID, request.VideoID) {
+			ctx.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: response.BADREQUEST,
 				StatusMsg:  "未点赞过视频",
+			})
+			return
+		}
+		if err := crud.UserDislikeVideo(db, user, request.VideoID); err != nil {
+			ctx.JSON(http.StatusNotFound, response.Response{
+				StatusCode: response.NOTFOUND,
+				StatusMsg:  err.Error(),
 			})
 			return
 		}
 	}
 
-	ctx.JSON(http.StatusOK, Response{
-		StatusCode: 0,
+	ctx.JSON(http.StatusOK, response.Response{
+		StatusCode: response.SUCCESS,
 		StatusMsg:  "操作成功",
 	})
 
 }
 
 func FavoriteList(ctx *gin.Context) {
+	db := sql.GetSession()
 
-	user := GetUserFromCtx(ctx)
+	userID := common.QueryIDAndValid(ctx, "user_id")
 
-	videos := crud.GetUserLikeVideosByUserID(user.ID)
+	videos := crud.GetUserLikeVideosByUserID(db, userID)
 
-	ctx.JSON(http.StatusOK, VideoListResponse{
-		Response: Response{
-			StatusCode: 0,
+	ctx.JSON(http.StatusOK, response.VideoListResponse{
+		Response: response.Response{
+			StatusCode: response.SUCCESS,
+			StatusMsg:  "获取成功",
 		},
-		VideoList: VideosModelChange(videos),
+		VideoList: common.VideosModelChange(db, videos),
 	})
 }

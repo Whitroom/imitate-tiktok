@@ -3,65 +3,58 @@ package crud
 import (
 	"fmt"
 
-	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
+	"gorm.io/gorm"
 )
 
-func UserLikeVideo(userID uint, videoID uint) error {
-	var user *models.User
+func UserLikeVideo(db *gorm.DB, user *models.User, videoID uint) error {
 	var video *models.Video
 
-	sql.DB.First(&user, userID)
-	sql.DB.First(&video, videoID)
+	err := db.First(&video, videoID).Error
 
-	if user == nil || video == nil {
-		return fmt.Errorf("找不到用户或视频")
+	if err != nil {
+		return fmt.Errorf("找不到视频")
 	}
 
-	sql.DB.Model(&user).Association("FavoriteVideos").Append(video)
-	sql.DB.Commit()
+	db.Model(&user).Association("FavoriteVideos").Append(video)
+	db.Commit()
 
 	return nil
 }
 
-func UserDislikeVideo(userID uint, videoID uint) error {
-	var user *models.User
+func UserDislikeVideo(db *gorm.DB, user *models.User, videoID uint) error {
 	var video *models.Video
 
-	sql.DB.First(&user, userID)
-	sql.DB.First(&video, videoID)
+	err := db.First(&video, videoID).Error
 
-	if user == nil || video == nil {
+	if err != nil {
 		return fmt.Errorf("找不到用户或视频")
 	}
 
-	if sql.DB.Model(&user).Association("FavoriteVideos").Delete(video) != nil {
+	if db.Model(&user).Association("FavoriteVideos").Delete(video) != nil {
 		return fmt.Errorf("找不到点赞的视频")
 	}
-	sql.DB.Commit()
+	db.Commit()
 
 	return nil
 }
 
-func GetUserLikeVideosByUserID(userID uint) []models.Video {
-	var user *models.User
-	sql.DB.Preload("FavoriteVideos").Find(&user, userID)
-	return user.FavoriteVideos
+func GetUserLikeVideosByUserID(db *gorm.DB, userID uint) []models.Video {
+	var videos []models.Video
+	db.Raw("select * from videos where id in (select video_id from user_favorite_videos where user_id = ?)", userID).Scan(&videos)
+	return videos
 }
 
-func GetVideoLikesCount(videoID uint) int64 {
+func GetVideoLikesCount(db *gorm.DB, videoID uint) int64 {
 	var count int64
-	sql.DB.Raw("select count(user_id) from user_favorite_videos where video_id = ?", videoID).Scan(&count)
+	db.Raw("select count(user_id) from user_favorite_videos where video_id = ?", videoID).Scan(&count)
 	return count
 }
 
-func IsUserFavoriteVideo(userID, videoID uint) bool {
-	var video *models.Video
-	if userID == 0 {
-		return false
-	}
-	sql.DB.Raw("select * from videos where id in "+
-		"(select video_id from user_favorite_videos where user_id = ? and video_id = ?)",
-		userID, videoID).Scan(&video)
-	return video != nil
+func IsUserFavoriteVideo(db *gorm.DB, userID, videoID uint) bool {
+	var video_id uint
+	db.Raw(
+		"select video_id from user_favorite_videos where user_id = ? and video_id = ?",
+		userID, videoID).Scan(&video_id)
+	return video_id != 0
 }

@@ -3,64 +3,66 @@ package controller
 import (
 	"net/http"
 
+	"gitee.com/Whitroom/imitate-tiktok/common"
+	"gitee.com/Whitroom/imitate-tiktok/common/response"
+	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
 )
 
-type CommentListResponse struct {
-	Response
-	CommentList []Comment `json:"comment_list,omitempty"`
-}
-
-type CommentResponse struct {
-	Response
-	Comment Comment `json:"comment,omitempty"`
-}
-
 func CommentAction(ctx *gin.Context) {
+	db := sql.GetSession()
+
 	var request struct {
 		VideoID     uint   `form:"video_id" binding:"required"`
-		ActionType  uint   `form:"action_type" binding:"required,min=1,max=2"`
+		ActionType  uint   `form:"action_type" binding:"required,gt=0,lt=3"`
 		CommentText string `form:"comment_text" binding:"omitempty"`
 		CommentID   uint   `form:"comment_id" binding:"omitempty"`
 	}
 
-	if !BindAndValid(ctx, &request) {
+	if !common.BindAndValid(ctx, &request) {
 		return
 	}
-	user := GetUserFromCtx(ctx)
+	user := common.GetUserFromCtx(ctx)
 	if request.ActionType == 1 {
 		if len(request.CommentText) == 0 {
-			ctx.JSON(http.StatusBadRequest, Response{
-				StatusCode: 1,
+			ctx.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: response.BADREQUEST,
 				StatusMsg:  "评论文本为空",
 			})
 			return
 		}
-		comment := crud.CreateComment(&models.Comment{
+		comment := crud.CreateComment(db, &models.Comment{
 			UserID:  user.ID,
 			VideoID: request.VideoID,
 			Content: request.CommentText,
 		})
-		ctx.JSON(http.StatusOK, CommentResponse{
-			Response: Response{
-				StatusCode: 0,
+		ctx.JSON(http.StatusOK, response.CommentResponse{
+			Response: response.Response{
+				StatusCode: response.SUCCESS,
 				StatusMsg:  "添加评论成功",
 			},
-			Comment: CommentModelChange(*comment),
+			Comment: common.CommentModelChange(db, *comment),
 		})
 	} else {
 		if request.CommentID == 0 {
-			ctx.JSON(http.StatusBadRequest, Response{
-				StatusCode: 1,
-				StatusMsg:  "删除失败",
+			ctx.JSON(http.StatusBadRequest, response.Response{
+				StatusCode: response.BADREQUEST,
+				StatusMsg:  "评论ID为空",
 			})
 			return
 		}
-		crud.DeleteComment(request.CommentID)
-		ctx.JSON(http.StatusOK, Response{
-			StatusCode: 0,
+		if err := crud.DeleteComment(db, request.CommentID); err != nil {
+			db.Rollback()
+			ctx.JSON(http.StatusNotFound, response.Response{
+				StatusCode: response.NOTFOUND,
+				StatusMsg:  "找不到相应的评论",
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, response.Response{
+			StatusCode: response.SUCCESS,
 			StatusMsg:  "评论删除成功",
 		})
 	}
@@ -68,13 +70,18 @@ func CommentAction(ctx *gin.Context) {
 }
 
 func CommentList(ctx *gin.Context) {
-	videoID := QueryIDAndValid(ctx, "video_id")
+	db := sql.GetSession()
+
+	videoID := common.QueryIDAndValid(ctx, "video_id")
 	if videoID == 0 {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, CommentListResponse{
-		Response:    Response{StatusCode: 0},
-		CommentList: CommentsModelChange(crud.GetComments(videoID)),
+	ctx.JSON(http.StatusOK, response.CommentListResponse{
+		Response: response.Response{
+			StatusCode: response.SUCCESS,
+			StatusMsg:  "获取成功",
+		},
+		CommentList: common.CommentsModelChange(db, crud.GetComments(db, videoID)),
 	})
 }
