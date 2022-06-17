@@ -31,7 +31,7 @@ func Publish(ctx *gin.Context) {
 	data, err := ctx.FormFile("data")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, response.Response{
-			StatusCode: 2,
+			StatusCode: response.BADREQUEST,
 			StatusMsg:  "文件获取错误: " + err.Error(),
 		})
 		return
@@ -39,7 +39,7 @@ func Publish(ctx *gin.Context) {
 
 	if data.Filename[len(data.Filename)-3:] != "mp4" {
 		ctx.JSON(http.StatusBadRequest, response.Response{
-			StatusCode: 3,
+			StatusCode: response.BADREQUEST,
 			StatusMsg:  "不支持的文件格式",
 		})
 		return
@@ -48,9 +48,10 @@ func Publish(ctx *gin.Context) {
 	title := ctx.PostForm("title")
 	if title == "" || utf8.RuneCountInString(title) > 20 {
 		ctx.JSON(http.StatusBadRequest, response.Response{
-			StatusCode: 2,
+			StatusCode: response.BADREQUEST,
 			StatusMsg:  "标题获取错误",
 		})
+		return
 	}
 	filename := filepath.Base(data.Filename)
 
@@ -60,7 +61,7 @@ func Publish(ctx *gin.Context) {
 	saveFile := filepath.Join("./public/", finalName)
 	if err := ctx.SaveUploadedFile(data, saveFile); err != nil {
 		ctx.JSON(http.StatusInternalServerError, response.Response{
-			StatusCode: 4,
+			StatusCode: response.INTERNALERROR,
 			StatusMsg:  err.Error(),
 		})
 		return
@@ -72,7 +73,7 @@ func Publish(ctx *gin.Context) {
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("cmd.Run() failed with %s\n", err)
 		ctx.JSON(http.StatusInternalServerError, response.Response{
-			StatusCode: 5,
+			StatusCode: response.INTERNALERROR,
 			StatusMsg:  err.Error(),
 		})
 		return
@@ -84,7 +85,7 @@ func Publish(ctx *gin.Context) {
 	})
 
 	ctx.JSON(http.StatusOK, response.Response{
-		StatusCode: 0,
+		StatusCode: response.SUCCESS,
 		StatusMsg:  finalName + " 上传成功",
 	})
 }
@@ -100,7 +101,8 @@ func PublishList(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, response.VideoListResponse{
 		Response: response.Response{
-			StatusCode: 0,
+			StatusCode: response.SUCCESS,
+			StatusMsg:  "获取成功",
 		},
 		VideoList: responseVideos,
 	})

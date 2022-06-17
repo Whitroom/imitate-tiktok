@@ -72,7 +72,6 @@ func Register(ctx *gin.Context) {
 
 func Login(ctx *gin.Context) {
 	db := sql.GetSession()
-	fmt.Println(db)
 
 	var request RegisterRequest
 	if !common.BindAndValid(ctx, &request) {

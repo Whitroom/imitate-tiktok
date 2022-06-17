@@ -28,7 +28,7 @@ func CommentAction(ctx *gin.Context) {
 	if request.ActionType == 1 {
 		if len(request.CommentText) == 0 {
 			ctx.JSON(http.StatusBadRequest, response.Response{
-				StatusCode: 1,
+				StatusCode: response.BADREQUEST,
 				StatusMsg:  "评论文本为空",
 			})
 			return
@@ -40,7 +40,7 @@ func CommentAction(ctx *gin.Context) {
 		})
 		ctx.JSON(http.StatusOK, response.CommentResponse{
 			Response: response.Response{
-				StatusCode: 0,
+				StatusCode: response.SUCCESS,
 				StatusMsg:  "添加评论成功",
 			},
 			Comment: common.CommentModelChange(db, *comment),
@@ -48,14 +48,14 @@ func CommentAction(ctx *gin.Context) {
 	} else {
 		if request.CommentID == 0 {
 			ctx.JSON(http.StatusBadRequest, response.Response{
-				StatusCode: 1,
+				StatusCode: response.BADREQUEST,
 				StatusMsg:  "删除失败",
 			})
 			return
 		}
 		crud.DeleteComment(db, request.CommentID)
 		ctx.JSON(http.StatusOK, response.Response{
-			StatusCode: 0,
+			StatusCode: response.SUCCESS,
 			StatusMsg:  "评论删除成功",
 		})
 	}
@@ -71,7 +71,10 @@ func CommentList(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, response.CommentListResponse{
-		Response:    response.Response{StatusCode: 0},
+		Response: response.Response{
+			StatusCode: response.SUCCESS,
+			StatusMsg:  "获取成功",
+		},
 		CommentList: common.CommentsModelChange(db, crud.GetComments(db, videoID)),
 	})
 }

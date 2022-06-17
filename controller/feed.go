@@ -46,7 +46,10 @@ func Feed(ctx *gin.Context) {
 		nextTime = videos[len(videos)-1].CreatedAt.Unix()
 	}
 	ctx.JSON(http.StatusOK, response.FeedResponse{
-		Response:  response.Response{StatusCode: 0},
+		Response: response.Response{
+			StatusCode: response.SUCCESS,
+			StatusMsg:  "获取成功",
+		},
 		VideoList: responseVideos,
 		NextTime:  nextTime,
 	})
