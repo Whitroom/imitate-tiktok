@@ -33,7 +33,7 @@ func InitDatabase() {
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Println("failed creating database:%w", err)
+		panic(fmt.Errorf("failed creating database:%w", err))
 	}
 	db.AutoMigrate(&models.User{}, &models.Video{}, &models.Comment{})
 	DB = db

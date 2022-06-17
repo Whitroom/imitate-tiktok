@@ -3,21 +3,13 @@ package controller
 import (
 	"net/http"
 
+	"gitee.com/Whitroom/imitate-tiktok/common"
+	"gitee.com/Whitroom/imitate-tiktok/common/response"
 	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"gitee.com/Whitroom/imitate-tiktok/sql/models"
 	"github.com/gin-gonic/gin"
 )
-
-type CommentListResponse struct {
-	Response
-	CommentList []Comment `json:"comment_list,omitempty"`
-}
-
-type CommentResponse struct {
-	Response
-	Comment Comment `json:"comment,omitempty"`
-}
 
 func CommentAction(ctx *gin.Context) {
 	db := sql.GetDB()
@@ -29,13 +21,13 @@ func CommentAction(ctx *gin.Context) {
 		CommentID   uint   `form:"comment_id" binding:"omitempty"`
 	}
 
-	if !BindAndValid(ctx, &request) {
+	if !common.BindAndValid(ctx, &request) {
 		return
 	}
-	user := GetUserFromCtx(ctx)
+	user := common.GetUserFromCtx(ctx)
 	if request.ActionType == 1 {
 		if len(request.CommentText) == 0 {
-			ctx.JSON(http.StatusBadRequest, Response{
+			ctx.JSON(http.StatusBadRequest, response.Response{
 				StatusCode: 1,
 				StatusMsg:  "评论文本为空",
 			})
@@ -46,23 +38,23 @@ func CommentAction(ctx *gin.Context) {
 			VideoID: request.VideoID,
 			Content: request.CommentText,
 		})
-		ctx.JSON(http.StatusOK, CommentResponse{
-			Response: Response{
+		ctx.JSON(http.StatusOK, response.CommentResponse{
+			Response: response.Response{
 				StatusCode: 0,
 				StatusMsg:  "添加评论成功",
 			},
-			Comment: CommentModelChange(&db, *comment),
+			Comment: common.CommentModelChange(&db, *comment),
 		})
 	} else {
 		if request.CommentID == 0 {
-			ctx.JSON(http.StatusBadRequest, Response{
+			ctx.JSON(http.StatusBadRequest, response.Response{
 				StatusCode: 1,
 				StatusMsg:  "删除失败",
 			})
 			return
 		}
 		crud.DeleteComment(&db, request.CommentID)
-		ctx.JSON(http.StatusOK, Response{
+		ctx.JSON(http.StatusOK, response.Response{
 			StatusCode: 0,
 			StatusMsg:  "评论删除成功",
 		})
@@ -73,13 +65,13 @@ func CommentAction(ctx *gin.Context) {
 func CommentList(ctx *gin.Context) {
 	db := sql.GetDB()
 
-	videoID := QueryIDAndValid(ctx, "video_id")
+	videoID := common.QueryIDAndValid(ctx, "video_id")
 	if videoID == 0 {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, CommentListResponse{
-		Response:    Response{StatusCode: 0},
-		CommentList: CommentsModelChange(&db, crud.GetComments(&db, videoID)),
+	ctx.JSON(http.StatusOK, response.CommentListResponse{
+		Response:    response.Response{StatusCode: 0},
+		CommentList: common.CommentsModelChange(&db, crud.GetComments(&db, videoID)),
 	})
 }

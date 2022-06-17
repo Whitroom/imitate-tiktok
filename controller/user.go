@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitee.com/Whitroom/imitate-tiktok/common"
+	"gitee.com/Whitroom/imitate-tiktok/common/response"
 	"gitee.com/Whitroom/imitate-tiktok/middlewares"
 	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
@@ -11,6 +13,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type RegisterRequest struct {
+	Username string `json:"username" binding:"required" form:"username"`
+	Password string `json:"password" binding:"required" form:"password"`
+}
 
 func hashEncode(str string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
@@ -24,31 +31,15 @@ func comparePasswords(sourcePwd, hashPwd string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hashPwd), []byte(sourcePwd)) == nil
 }
 
-type UserLoginResponse struct {
-	Response
-	UserID int64  `json:"user_id,omitempty"`
-	Token  string `json:"token"`
-}
-
-type UserResponse struct {
-	Response
-	User User `json:"user"`
-}
-
-type RegisterRequest struct {
-	Username string `json:"username" binding:"required" form:"username"`
-	Password string `json:"password" binding:"required" form:"password"`
-}
-
 func Register(ctx *gin.Context) {
 	db := sql.GetDB()
 
 	var request RegisterRequest
-	if !BindAndValid(ctx, &request) {
+	if !common.BindAndValid(ctx, &request) {
 		return
 	}
 	if crud.GetUserByName(&db, request.Username) != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
+		ctx.JSON(http.StatusBadRequest, response.Response{
 			StatusCode: 2,
 			StatusMsg:  "存在用户姓名",
 		})
@@ -62,15 +53,15 @@ func Register(ctx *gin.Context) {
 
 	token, err := middlewares.Sign(newUser.ID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, Response{
+		ctx.JSON(http.StatusInternalServerError, response.Response{
 			StatusCode: 3,
 			StatusMsg:  "token创建失败",
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, UserLoginResponse{
-		Response: Response{
+	ctx.JSON(http.StatusOK, response.UserLoginResponse{
+		Response: response.Response{
 			StatusCode: 0,
 			StatusMsg:  "用户创建成功",
 		},
@@ -83,13 +74,13 @@ func Login(ctx *gin.Context) {
 	db := sql.GetDB()
 
 	var request RegisterRequest
-	if !BindAndValid(ctx, &request) {
+	if !common.BindAndValid(ctx, &request) {
 		return
 	}
 	existedUser := crud.GetUserByName(&db, request.Username)
 
 	if existedUser == nil {
-		ctx.JSON(http.StatusNotFound, Response{
+		ctx.JSON(http.StatusNotFound, response.Response{
 			StatusCode: 2,
 			StatusMsg:  "找不到用户",
 		})
@@ -97,7 +88,7 @@ func Login(ctx *gin.Context) {
 	}
 
 	if !comparePasswords(request.Password, existedUser.Password) {
-		ctx.JSON(http.StatusUnauthorized, Response{
+		ctx.JSON(http.StatusUnauthorized, response.Response{
 			StatusCode: 3,
 			StatusMsg:  "用户名或密码错误",
 		})
@@ -106,15 +97,15 @@ func Login(ctx *gin.Context) {
 
 	token, err := middlewares.Sign(existedUser.ID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, Response{
+		ctx.JSON(http.StatusInternalServerError, response.Response{
 			StatusCode: 4,
 			StatusMsg:  "token创建失败",
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, UserLoginResponse{
-		Response: Response{StatusCode: 0},
+	ctx.JSON(http.StatusOK, response.UserLoginResponse{
+		Response: response.Response{StatusCode: 0},
 		UserID:   int64(existedUser.ID),
 		Token:    token,
 	})
@@ -134,7 +125,7 @@ func UserInfo(ctx *gin.Context) {
 		}
 		user, err = crud.GetUserByID(&db, userID)
 		if err != nil {
-			ctx.JSON(http.StatusNotFound, Response{
+			ctx.JSON(http.StatusNotFound, response.Response{
 				StatusCode: 3,
 				StatusMsg:  "找不到用户",
 			})
@@ -142,29 +133,29 @@ func UserInfo(ctx *gin.Context) {
 		}
 	}
 
-	toUserID := QueryIDAndValid(ctx, "user_id")
+	toUserID := common.QueryIDAndValid(ctx, "user_id")
 	if toUserID == 0 {
 		return
 	}
 
 	toUser, err := crud.GetUserByID(&db, toUserID)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, Response{
+		ctx.JSON(http.StatusNotFound, response.Response{
 			StatusCode: 3,
 			StatusMsg:  "找不到用户",
 		})
 		return
 	}
 
-	responseUser := UserModelChange(&db, *toUser)
+	responseUser := common.UserModelChange(&db, *toUser)
 	if user != nil {
 		responseUser.IsFollow = crud.IsUserFollow(&db, user.ID, toUserID)
 	} else {
 		responseUser.IsFollow = false
 	}
 
-	ctx.JSON(http.StatusOK, UserResponse{
-		Response: Response{
+	ctx.JSON(http.StatusOK, response.UserResponse{
+		Response: response.Response{
 			StatusCode: 0,
 			StatusMsg:  "已找到用户",
 		},

@@ -33,12 +33,12 @@ func AuthUser() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		UserID, err := Parse(ctx, token)
+		userID, err := Parse(ctx, token)
 		if err != nil {
 			ctx.Abort()
 			return
 		}
-		User, err := crud.GetUserByID(&db, UserID)
+		user, err := crud.GetUserByID(&db, userID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, gin.H{
 				"StatusCode": 3,
@@ -47,7 +47,7 @@ func AuthUser() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		ctx.Set("User", User)
+		ctx.Set("User", user)
 		ctx.Next()
 	}
 }
