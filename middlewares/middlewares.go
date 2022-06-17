@@ -23,7 +23,7 @@ func InitSecret() {
 // 验证用户中间件, 若没有token会返回400, 验证失败会返回401, 找不到用户会返回404, 响应code为1, 2, 3
 func AuthUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		db := sql.GetDB()
+		db := sql.GetSession()
 		token := ctx.Query("token")
 		if token == "" {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -38,7 +38,7 @@ func AuthUser() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		user, err := crud.GetUserByID(&db, userID)
+		user, err := crud.GetUserByID(db, userID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, gin.H{
 				"StatusCode": 3,

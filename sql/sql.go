@@ -39,6 +39,6 @@ func InitDatabase() {
 	DB = db
 }
 
-func GetDB() gorm.DB {
-	return *DB
+func GetSession() *gorm.DB {
+	return DB.Session(&gorm.Session{PrepareStmt: true})
 }

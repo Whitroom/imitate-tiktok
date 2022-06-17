@@ -11,7 +11,7 @@ import (
 )
 
 func RelationAction(ctx *gin.Context) {
-	db := sql.GetDB()
+	db := sql.GetSession()
 
 	var request struct {
 		ToUserID   uint `binding:"required" form:"to_user_id"`
@@ -29,7 +29,7 @@ func RelationAction(ctx *gin.Context) {
 		return
 	}
 	if request.ActionType == 1 {
-		_, err := crud.SubscribeUser(&db, user.ID, request.ToUserID)
+		_, err := crud.SubscribeUser(db, user.ID, request.ToUserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, response.Response{
 				StatusCode: 3,
@@ -37,7 +37,7 @@ func RelationAction(ctx *gin.Context) {
 			})
 			return
 		}
-		if crud.IsUserFollow(&db, user.ID, request.ToUserID) {
+		if crud.IsUserFollow(db, user.ID, request.ToUserID) {
 			ctx.JSON(http.StatusBadRequest, response.Response{
 				StatusCode: 4,
 				StatusMsg:  "已关注过用户",
@@ -45,7 +45,7 @@ func RelationAction(ctx *gin.Context) {
 			return
 		}
 	} else {
-		_, err := crud.CancelSubscribeUser(&db, user.ID, request.ToUserID)
+		_, err := crud.CancelSubscribeUser(db, user.ID, request.ToUserID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, response.Response{
 				StatusCode: 3,
@@ -53,7 +53,7 @@ func RelationAction(ctx *gin.Context) {
 			})
 			return
 		}
-		if !crud.IsUserFollow(&db, user.ID, request.ToUserID) {
+		if !crud.IsUserFollow(db, user.ID, request.ToUserID) {
 			ctx.JSON(http.StatusBadRequest, response.Response{
 				StatusCode: 4,
 				StatusMsg:  "未关注过用户",
@@ -68,14 +68,14 @@ func RelationAction(ctx *gin.Context) {
 }
 
 func FollowList(ctx *gin.Context) {
-	db := sql.GetDB()
+	db := sql.GetSession()
 
 	userID := common.QueryIDAndValid(ctx, "user_id")
 	if userID == 0 {
 		return
 	}
-	users := crud.GetUserSubscribersByID(&db, userID)
-	responseUsers := common.UsersModelChange(&db, users)
+	users := crud.GetUserSubscribersByID(db, userID)
+	responseUsers := common.UsersModelChange(db, users)
 	ctx.JSON(http.StatusOK, response.UserListResponse{
 		Response: response.Response{
 			StatusCode: 0,
@@ -85,17 +85,17 @@ func FollowList(ctx *gin.Context) {
 }
 
 func FollowerList(ctx *gin.Context) {
-	db := sql.GetDB()
+	db := sql.GetSession()
 
 	userID := common.QueryIDAndValid(ctx, "user_id")
 	if userID == 0 {
 		return
 	}
-	users := crud.GetUserFollowersByID(&db, uint(userID))
-	responseUsers := common.UsersModelChange(&db, users)
+	users := crud.GetUserFollowersByID(db, uint(userID))
+	responseUsers := common.UsersModelChange(db, users)
 	for i := 0; i < len(responseUsers); i++ {
 		responseUsers[i].IsFollow = crud.IsUserFollow(
-			&db, uint(responseUsers[i].ID), uint(userID),
+			db, uint(responseUsers[i].ID), uint(userID),
 		)
 	}
 	ctx.JSON(http.StatusOK, response.UserListResponse{

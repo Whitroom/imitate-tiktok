@@ -32,20 +32,20 @@ func comparePasswords(sourcePwd, hashPwd string) bool {
 }
 
 func Register(ctx *gin.Context) {
-	db := sql.GetDB()
+	db := sql.GetSession()
 
 	var request RegisterRequest
 	if !common.BindAndValid(ctx, &request) {
 		return
 	}
-	if crud.GetUserByName(&db, request.Username) != nil {
+	if crud.GetUserByName(db, request.Username) != nil {
 		ctx.JSON(http.StatusBadRequest, response.Response{
 			StatusCode: 2,
 			StatusMsg:  "存在用户姓名",
 		})
 		return
 	}
-	newUser := crud.CreateUser(&db, &models.User{
+	newUser := crud.CreateUser(db, &models.User{
 		Name:     request.Username,
 		Password: hashEncode(request.Password),
 		Content:  "",
@@ -71,13 +71,14 @@ func Register(ctx *gin.Context) {
 }
 
 func Login(ctx *gin.Context) {
-	db := sql.GetDB()
+	db := sql.GetSession()
+	fmt.Println(db)
 
 	var request RegisterRequest
 	if !common.BindAndValid(ctx, &request) {
 		return
 	}
-	existedUser := crud.GetUserByName(&db, request.Username)
+	existedUser := crud.GetUserByName(db, request.Username)
 
 	if existedUser == nil {
 		ctx.JSON(http.StatusNotFound, response.Response{
@@ -113,7 +114,7 @@ func Login(ctx *gin.Context) {
 
 // 查询用户信息接口函数。
 func UserInfo(ctx *gin.Context) {
-	db := sql.GetDB()
+	db := sql.GetSession()
 
 	var user *models.User
 
@@ -123,7 +124,7 @@ func UserInfo(ctx *gin.Context) {
 		if err != nil {
 			return
 		}
-		user, err = crud.GetUserByID(&db, userID)
+		user, err = crud.GetUserByID(db, userID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, response.Response{
 				StatusCode: 3,
@@ -138,7 +139,7 @@ func UserInfo(ctx *gin.Context) {
 		return
 	}
 
-	toUser, err := crud.GetUserByID(&db, toUserID)
+	toUser, err := crud.GetUserByID(db, toUserID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, response.Response{
 			StatusCode: 3,
@@ -147,9 +148,9 @@ func UserInfo(ctx *gin.Context) {
 		return
 	}
 
-	responseUser := common.UserModelChange(&db, *toUser)
+	responseUser := common.UserModelChange(db, *toUser)
 	if user != nil {
-		responseUser.IsFollow = crud.IsUserFollow(&db, user.ID, toUserID)
+		responseUser.IsFollow = crud.IsUserFollow(db, user.ID, toUserID)
 	} else {
 		responseUser.IsFollow = false
 	}

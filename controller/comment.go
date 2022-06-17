@@ -12,7 +12,7 @@ import (
 )
 
 func CommentAction(ctx *gin.Context) {
-	db := sql.GetDB()
+	db := sql.GetSession()
 
 	var request struct {
 		VideoID     uint   `form:"video_id" binding:"required"`
@@ -33,7 +33,7 @@ func CommentAction(ctx *gin.Context) {
 			})
 			return
 		}
-		comment := crud.CreateComment(&db, &models.Comment{
+		comment := crud.CreateComment(db, &models.Comment{
 			UserID:  user.ID,
 			VideoID: request.VideoID,
 			Content: request.CommentText,
@@ -43,7 +43,7 @@ func CommentAction(ctx *gin.Context) {
 				StatusCode: 0,
 				StatusMsg:  "添加评论成功",
 			},
-			Comment: common.CommentModelChange(&db, *comment),
+			Comment: common.CommentModelChange(db, *comment),
 		})
 	} else {
 		if request.CommentID == 0 {
@@ -53,7 +53,7 @@ func CommentAction(ctx *gin.Context) {
 			})
 			return
 		}
-		crud.DeleteComment(&db, request.CommentID)
+		crud.DeleteComment(db, request.CommentID)
 		ctx.JSON(http.StatusOK, response.Response{
 			StatusCode: 0,
 			StatusMsg:  "评论删除成功",
@@ -63,7 +63,7 @@ func CommentAction(ctx *gin.Context) {
 }
 
 func CommentList(ctx *gin.Context) {
-	db := sql.GetDB()
+	db := sql.GetSession()
 
 	videoID := common.QueryIDAndValid(ctx, "video_id")
 	if videoID == 0 {
@@ -72,6 +72,6 @@ func CommentList(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response.CommentListResponse{
 		Response:    response.Response{StatusCode: 0},
-		CommentList: common.CommentsModelChange(&db, crud.GetComments(&db, videoID)),
+		CommentList: common.CommentsModelChange(db, crud.GetComments(db, videoID)),
 	})
 }
