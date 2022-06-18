@@ -49,9 +49,9 @@ func Parse(ctx *gin.Context, tokenString string) (uint, error) {
 	createTime, _ := claims["nbf"].(int64)
 
 	if time.Now().Unix()-createTime > 2*int64(time.Hour) {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"StatusCode": 2,
-			"StatusMsg":  "token超时, 请重新登陆获取",
+		ctx.JSON(http.StatusUnauthorized, response.Response{
+			StatusCode: response.BADREQUEST,
+			StatusMsg:  "token超时, 请重新登陆获取",
 		})
 		return 0, err
 	}

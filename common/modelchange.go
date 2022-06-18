@@ -43,21 +43,21 @@ func CommentModelChange(db *gorm.DB, comment models.Comment) response.Comment {
 	}
 }
 
-func VideosModelChange(db *gorm.DB, videoList []models.Video) []response.Video {
+func VideosModelChange(db *gorm.DB, userID uint, videoList []models.Video) []response.Video {
 	var videos []response.Video
 	for _, video := range videoList {
-		videos = append(videos, VideoModelChange(db, &video))
+		videos = append(videos, VideoModelChange(db, userID, &video))
 	}
 	return videos
 }
 
-func VideoModelChange(db *gorm.DB, video *models.Video) response.Video {
+func VideoModelChange(db *gorm.DB, userID uint, video *models.Video) response.Video {
 	return response.Video{
 		ID:            int64(video.ID),
 		FavoriteCount: crud.GetVideoLikesCount(db, video.ID),
 		Author:        UserModelChange(db, video.Author),
 		CommentCount:  crud.GetVideoCommentsCountByID(db, video.ID),
-		IsFavorite:    true,
+		IsFavorite:    crud.IsUserFavoriteVideo(db, userID, video.ID),
 		// 以下是测试数据
 		PlayUrl:  "http://192.168.1.4:8080/static/" + video.Title,
 		CoverUrl: "http://192.168.1.4:8080/static/covers/" + video.Title[:len(video.Title)-3] + "jpg",

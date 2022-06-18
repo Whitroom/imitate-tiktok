@@ -70,11 +70,11 @@ func RelationAction(ctx *gin.Context) {
 func FollowList(ctx *gin.Context) {
 	db := sql.GetSession()
 
-	userID := common.QueryIDAndValid(ctx, "user_id")
-	if userID == 0 {
+	user := common.GetUserFromCtx(ctx)
+	if user.ID == 0 {
 		return
 	}
-	users := crud.GetUserSubscribersByID(db, userID)
+	users := crud.GetUserSubscribersByID(db, user.ID)
 	responseUsers := common.UsersModelChange(db, users)
 	ctx.JSON(http.StatusOK, response.UserListResponse{
 		Response: response.Response{

@@ -95,10 +95,7 @@ func PublishList(ctx *gin.Context) {
 
 	user := common.GetUserFromCtx(ctx)
 	videos := crud.GetUserPublishVideosByID(db, user.ID)
-	responseVideos := common.VideosModelChange(db, videos)
-	for i := 0; i < len(responseVideos); i++ {
-		responseVideos[i].IsFavorite = crud.IsUserFavoriteVideo(db, user.ID, uint(responseVideos[i].ID))
-	}
+	responseVideos := common.VideosModelChange(db, user.ID, videos)
 	ctx.JSON(http.StatusOK, response.VideoListResponse{
 		Response: response.Response{
 			StatusCode: response.SUCCESS,

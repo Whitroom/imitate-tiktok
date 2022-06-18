@@ -40,7 +40,7 @@ func Register(ctx *gin.Context) {
 	}
 	if crud.GetUserByName(db, request.Username) != nil {
 		ctx.JSON(http.StatusBadRequest, response.Response{
-			StatusCode: 2,
+			StatusCode: response.BADREQUEST,
 			StatusMsg:  "存在用户姓名",
 		})
 		return
@@ -54,7 +54,7 @@ func Register(ctx *gin.Context) {
 	token, err := middlewares.Sign(newUser.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, response.Response{
-			StatusCode: 3,
+			StatusCode: response.INTERNALERROR,
 			StatusMsg:  "token创建失败",
 		})
 		return
@@ -62,7 +62,7 @@ func Register(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response.UserLoginResponse{
 		Response: response.Response{
-			StatusCode: 0,
+			StatusCode: response.SUCCESS,
 			StatusMsg:  "用户创建成功",
 		},
 		UserID: int64(newUser.ID),
@@ -81,7 +81,7 @@ func Login(ctx *gin.Context) {
 
 	if existedUser == nil {
 		ctx.JSON(http.StatusNotFound, response.Response{
-			StatusCode: 2,
+			StatusCode: response.NOTFOUND,
 			StatusMsg:  "找不到用户",
 		})
 		return
@@ -89,7 +89,7 @@ func Login(ctx *gin.Context) {
 
 	if !comparePasswords(request.Password, existedUser.Password) {
 		ctx.JSON(http.StatusUnauthorized, response.Response{
-			StatusCode: 3,
+			StatusCode: response.BADREQUEST,
 			StatusMsg:  "用户名或密码错误",
 		})
 		return
@@ -98,7 +98,7 @@ func Login(ctx *gin.Context) {
 	token, err := middlewares.Sign(existedUser.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, response.Response{
-			StatusCode: 4,
+			StatusCode: response.INTERNALERROR,
 			StatusMsg:  "token创建失败",
 		})
 		return
@@ -126,7 +126,7 @@ func UserInfo(ctx *gin.Context) {
 		user, err = crud.GetUserByID(db, userID)
 		if err != nil {
 			ctx.JSON(http.StatusNotFound, response.Response{
-				StatusCode: 3,
+				StatusCode: response.NOTFOUND,
 				StatusMsg:  "找不到用户",
 			})
 			return
@@ -141,7 +141,7 @@ func UserInfo(ctx *gin.Context) {
 	toUser, err := crud.GetUserByID(db, toUserID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, response.Response{
-			StatusCode: 3,
+			StatusCode: response.NOTFOUND,
 			StatusMsg:  "找不到用户",
 		})
 		return
@@ -156,7 +156,7 @@ func UserInfo(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response.UserResponse{
 		Response: response.Response{
-			StatusCode: 0,
+			StatusCode: response.SUCCESS,
 			StatusMsg:  "已找到用户",
 		},
 		User: responseUser,

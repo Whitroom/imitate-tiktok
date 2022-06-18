@@ -76,6 +76,6 @@ func FavoriteList(ctx *gin.Context) {
 			StatusCode: response.SUCCESS,
 			StatusMsg:  "获取成功",
 		},
-		VideoList: common.VideosModelChange(db, videos),
+		VideoList: common.VideosModelChange(db, userID, videos),
 	})
 }

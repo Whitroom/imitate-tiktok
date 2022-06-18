@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"gitee.com/Whitroom/imitate-tiktok/common/response"
 	"gitee.com/Whitroom/imitate-tiktok/sql"
 	"gitee.com/Whitroom/imitate-tiktok/sql/crud"
 	"github.com/gin-gonic/gin"
@@ -25,14 +26,6 @@ func AuthUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		db := sql.GetSession()
 		token := ctx.Query("token")
-		if token == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"StatusCode": 1,
-				"StatusMsg":  "没有相应的token, 请重新登陆获取",
-			})
-			ctx.Abort()
-			return
-		}
 		userID, err := Parse(ctx, token)
 		if err != nil {
 			ctx.Abort()
@@ -40,9 +33,9 @@ func AuthUser() gin.HandlerFunc {
 		}
 		user, err := crud.GetUserByID(db, userID)
 		if err != nil {
-			ctx.JSON(http.StatusNotFound, gin.H{
-				"StatusCode": 3,
-				"StatusMsg":  "token解析错误, 请重新登陆获取",
+			ctx.JSON(http.StatusNotFound, response.Response{
+				StatusCode: response.NOTFOUND,
+				StatusMsg:  "找不到相应用户",
 			})
 			ctx.Abort()
 			return
